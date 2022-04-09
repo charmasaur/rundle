@@ -2,6 +2,7 @@ import os
 import base64
 
 from flask import render_template, Markup
+from geographiclib.geodesic import Geodesic
 
 from app.app import app
 
@@ -28,10 +29,15 @@ def get_ordinal(id):
     assert False
 
 def dist(target, end):
-    return DISTANCES[get_ordinal(target)][get_ordinal(end)]
+    dt = DATA[get_ordinal(target)]
+    de = DATA[get_ordinal(end)]
+    return int(Geodesic.WGS84.Inverse(de["lat"], de["lng"], dt["lat"], dt["lng"])["s12"] / 1000 + 0.5)
+
 
 def bearing(target, end):
-    return BEARINGS[get_ordinal(target)][get_ordinal(end)]
+    dt = DATA[get_ordinal(target)]
+    de = DATA[get_ordinal(end)]
+    return Geodesic.WGS84.Inverse(de["lat"], de["lng"], dt["lat"], dt["lng"])["azi1"]
 
 def compare(x, y):
     if x < y:

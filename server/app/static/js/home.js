@@ -6,11 +6,6 @@ function get_previous_guess_element(i) {
     return document.getElementById("previous_guess" + i);
 }
 
-//UP = twemoji.convert.fromCodePoint("e232");
-//DOWN = twemoji.convert.fromCodePoint("e233");
-//LEFT = twemoji.convert.fromCodePoint("e235");
-//RIGHT = twemoji.convert.fromCodePoint("e234");
-
 UP = twemoji.convert.fromCodePoint("2B06") + twemoji.convert.fromCodePoint("fe0f");
 DOWN = twemoji.convert.fromCodePoint("2B07") + twemoji.convert.fromCodePoint("fe0f");
 LEFT = twemoji.convert.fromCodePoint("2B05") + twemoji.convert.fromCodePoint("fe0f");
