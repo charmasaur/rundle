@@ -41,10 +41,6 @@ def compare(x, y):
         return 1
     assert False
 
-def path(img):
-    root = os.path.realpath(os.path.dirname(__file__))
-    return os.path.join(root, 'static', img)
-
 @app.route('/', methods=['GET'])
 def home():
     runs = Run.query.all()
