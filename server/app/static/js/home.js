@@ -2,10 +2,6 @@ function is_valid_guess(guess) {
     return guess in CHOICES;
 }
 
-function get_previous_guess_element(i) {
-    return document.getElementById("previous_guess" + i);
-}
-
 UP = twemoji.convert.fromCodePoint("2B06") + twemoji.convert.fromCodePoint("fe0f");
 DOWN = twemoji.convert.fromCodePoint("2B07") + twemoji.convert.fromCodePoint("fe0f");
 LEFT = twemoji.convert.fromCodePoint("2B05") + twemoji.convert.fromCodePoint("fe0f");
@@ -68,18 +64,18 @@ function get_text_for_bearing(x) {
     return UP_LEFT;
 }
 
-function get_guess_suffix(guess) {
+function get_guess_hints(guess) {
     if (guess == TARGET) {
-        return MEDAL + " " + MEDAL + " " + MEDAL;
+        return [MEDAL, MEDAL, MEDAL, MEDAL];
     }
     var choice = CHOICES[guess];
 
-    var result = "";
+    var result = [];
 
-    result += get_text_for_comparison(choice["length"]) + " ";
-    result += get_text_for_comparison(choice["elevation"]) + " ";
-    result += get_text_for_distance(choice["distance"]) + " ";
-    result += get_text_for_bearing(choice["bearing"]);
+    result.push(get_text_for_comparison(choice["length"]));
+    result.push(get_text_for_comparison(choice["elevation"]));
+    result.push(get_text_for_distance(choice["distance"]));
+    result.push(get_text_for_bearing(choice["bearing"]));
 
     return result;
 }
@@ -101,7 +97,18 @@ window.onload = function() {
       console.log(guess);
       console.log(previous_guesses);
       previous_guesses.push(guess);
-      get_previous_guess_element(num_previous_guesses).textContent = guess + get_guess_suffix(guess);
+
+      var hints = get_guess_hints(guess);
+      var previous_guess_element = document.getElementById("previous_guess_" + num_previous_guesses);
+      previous_guess_element.textContent = guess;
+
+      for (var i = 0; i < hints.length; i++) {
+        let td = document.getElementById("hint_" + num_previous_guesses + "_" + i);
+        td.textContent = hints[i];
+        td.style.contentVisibility = 'hidden';
+        setTimeout(function() { td.style.contentVisibility = 'visible'; }, (i+1)*300);
+      }
+
       num_previous_guesses++;
 
       twemoji.parse(document.body);

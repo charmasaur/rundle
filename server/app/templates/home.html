@@ -11,6 +11,34 @@
             margin: 0 .05em 0 .1em;
             vertical-align: -0.1em;
         }
+        img.drawing {
+            display: block;
+            margin: auto;
+        }
+        body {
+            max-width: 500px;
+            margin: auto;
+        }
+        h1 {
+            text-align: center
+        }
+        td {
+            padding: 5px;
+            background-color: #eeeeee
+        }
+        div.input {
+            padding: 5px;
+        }
+        input {
+            box-sizing: border-box;
+        }
+        td.hint {
+            width: 12%;
+            text-align: center;
+        }
+        input, button, table {
+            width: 100%;
+        }
       </style>
       <script src="https://twemoji.maxcdn.com/v/latest/twemoji.min.js" crossorigin="anonymous"></script>
       <script type="text/javascript">
@@ -21,25 +49,38 @@
       <script type="text/javascript" src="/static/js/home.js"></script>
   </head>
   <body>
-      <h1>
-          <span style="color: #ff0000">Run</span>dle
-      </h1>
-      <div><img src={{map}} width=200 height=200><img src={{profile}} width=200 height=200></div>
       <div>
-          {% for n in range(num_guesses) %}
-            <div id="previous_guess{{n}}">????</div>
-          {% endfor %}
-      </div>
-      <div>
-          <datalist id="choices">
-              {% for choice in choices %}
-              <option value="{{choice}}">
-              {% endfor %}
-          </datalist>
-          <input list="choices" id="guess"/>
-      </div>
-      <div>
-          <button id="submit">Guess <span>&#127939;</span></button>
+          <h1>
+              <span style="color: #ff0000">Run</span>dle
+          </h1>
+          <div>
+              <img class="drawing" src={{map}} width=200 height=200>
+              <img class = "drawing" src={{profile}} width=200 height=200>
+          </div>
+          <div>
+              <table>
+                  {% for n in range(num_guesses) %}
+                  <tr>
+                      <td id="previous_guess_{{n}}"></td>
+                      <td id="hint_{{n}}_0" class="hint">&nbsp;</td>
+                      <td id="hint_{{n}}_1" class="hint">&nbsp;</td>
+                      <td id="hint_{{n}}_2" class="hint">&nbsp;</td>
+                      <td id="hint_{{n}}_3" class="hint">&nbsp;</td>
+                  </tr>
+                  {% endfor %}
+              </table>
+          </div>
+          <div class="input">
+              <datalist id="choices">
+                  {% for choice in choices %}
+                  <option value="{{choice}}">
+                  {% endfor %}
+              </datalist>
+              <input list="choices" id="guess"/>
+          </div>
+          <div class="input">
+              <button id="submit">Guess <span>&#127939;</span></button>
+          </div>
       </div>
   </body>
 </html>
