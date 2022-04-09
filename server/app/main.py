@@ -109,15 +109,19 @@ def create_post():
         lat = request.form.get("lat")
         if not lat:
             return "No latitude", 400
+        lat = float(lat)
         lng = request.form.get("lng")
         if not lng:
             return "No longitude", 400
+        lng = float(lng)
         length = request.form.get("length")
         if not length:
             return "No length", 400
+        length = float(length)
         elevation = request.form.get("elevation")
         if elevation is None:
             return "No elevation", 400
+        elevation = float(elevation)
 
     map_image_file = request.files.get("map_image")
     if not map_image_file:
@@ -127,6 +131,15 @@ def create_post():
     if not profile_image_file:
         return "No elevation profile image, 400"
     profile_image = profile_image_file.read()
+
+    if lat < -90 or lat > 90:
+        return "Invalid latitude", 400
+    if lng < -180 or lng > 180:
+        return "Invalid longitude", 400
+
+    # Check for duplicate names
+    if Run.query.filter_by(name=name).count():
+        return "Duplicate name", 400
 
     item = Run(
         name=name,
