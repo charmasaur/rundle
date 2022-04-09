@@ -14,14 +14,31 @@ DOWN_LEFT = twemoji.convert.fromCodePoint("2199") + twemoji.convert.fromCodePoin
 GREEN = twemoji.convert.fromCodePoint("1F7E9");
 MEDAL = twemoji.convert.fromCodePoint("1f947");
 
-function get_text_for_comparison(x) {
+MOUNTAIN = twemoji.convert.fromCodePoint("26f0");
+BEACH = twemoji.convert.fromCodePoint("1f3d6") + twemoji.convert.fromCodePoint("fe0f");
+PLUS = twemoji.convert.fromCodePoint("2795");
+MINUS = twemoji.convert.fromCodePoint("2796");
+
+function get_text_for_length(x) {
     if (x < 0) {
         // Needs to be bigger
-        return UP;
+        return PLUS;
     }
     if (x > 0) {
         // Needs to be smaller
-        return DOWN;
+        return MINUS;
+    }
+    return GREEN;
+}
+
+function get_text_for_elevation(x) {
+    if (x < 0) {
+        // Needs to be bigger
+        return MOUNTAIN;
+    }
+    if (x > 0) {
+        // Needs to be smaller
+        return BEACH;
     }
     return GREEN;
 }
@@ -72,8 +89,8 @@ function get_guess_hints(guess) {
 
     var result = [];
 
-    result.push(get_text_for_comparison(choice["length"]));
-    result.push(get_text_for_comparison(choice["elevation"]));
+    result.push(get_text_for_length(choice["length"]));
+    result.push(get_text_for_elevation(choice["elevation"]));
     result.push(get_text_for_distance(choice["distance"]));
     result.push(get_text_for_bearing(choice["bearing"]));
 
@@ -94,8 +111,6 @@ window.onload = function() {
       if (previous_guesses.includes(guess) || !is_valid_guess(guess)) {
           return;
       }
-      console.log(guess);
-      console.log(previous_guesses);
       previous_guesses.push(guess);
 
       var hints = get_guess_hints(guess);
