@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+{% autoescape true %}
+<meta charset="UTF-8">
+<html>
+  <head>
+      <title>Rundle: list runs</title>
+  </head>
+  <body>
+      <h1>
+          Rundle: list runs
+      </h1>
+      <div>
+          {% for run in runs %}
+          {{run.name}}: {{run.length}}km {{run.elevation}}m {{run.latitude}} {{run.longitude}}<br>
+          {% endfor %}
+      </div>
+  </body>
+</html>
+{% endautoescape %}

@@ -1,8 +1,46 @@
 <!DOCTYPE html>
 {% autoescape true %}
+<meta charset="UTF-8">
 <html>
+  <head>
+      <title>Rundle</title>
+      <style>
+        img.emoji {
+            height: 1em;
+            width: 1em;
+            margin: 0 .05em 0 .1em;
+            vertical-align: -0.1em;
+        }
+      </style>
+      <script src="https://twemoji.maxcdn.com/v/latest/twemoji.min.js" crossorigin="anonymous"></script>
+      <script type="text/javascript">
+          var CHOICES = {{choices|tojson|safe}};
+          var TARGET = {{target|tojson|safe}};
+          var NUM_GUESSES = {{num_guesses}};
+      </script>
+      <script type="text/javascript" src="/static/js/home.js"></script>
+  </head>
   <body>
-      Hello, welcome to Rundle!
+      <h1>
+          <span style="color: #ff0000">Run</span>dle
+      </h1>
+      <div><img src={{map}} width=200 height=200><img src={{profile}} width=200 height=200></div>
+      <div>
+          {% for n in range(num_guesses) %}
+            <div id="previous_guess{{n}}">????</div>
+          {% endfor %}
+      </div>
+      <div>
+          <datalist id="choices">
+              {% for choice in choices %}
+              <option value="{{choice}}">
+              {% endfor %}
+          </datalist>
+          <input list="choices" id="guess"/>
+      </div>
+      <div>
+          <button id="submit">Guess <span>&#127939;</span></button>
+      </div>
   </body>
 </html>
 {% endautoescape %}
