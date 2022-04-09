@@ -77,7 +77,7 @@ function get_guess_suffix(guess) {
     var result = "";
 
     result += get_text_for_comparison(choice["length"]) + " ";
-    result += get_text_for_comparison(choice["height"]) + " ";
+    result += get_text_for_comparison(choice["elevation"]) + " ";
     result += get_text_for_distance(choice["distance"]) + " ";
     result += get_text_for_bearing(choice["bearing"]);
 

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<html>
+  <head>
+      <title>Rundle: create new run</title>
+  </head>
+  <body>
+      <h1>
+          Rundle: create new run
+      </h1>
+      <form action=create method=post enctype=multipart/form-data>
+          <label for="name">Name:</label>
+          <input type="text" id="name" id="name" name="name"><br>
+          <label for="lat">Latitude:</label>
+          <input type="number" id="lat" name="lat" step="any"><br>
+          <label for="lng">Longitude:</label>
+          <input type="number" id="lng" name="lng" step="any"><br>
+          <label for="length">Length (km):</label>
+          <input type="number" id="length" name="length" step="any"><br>
+          <label for="elevation">Elevation (m):</label>
+          <input type="number" id="elevation" name="elevation" step="any"><br>
+          <label for="map_image">Map image (SVG):</label>
+          <input type="file" id="map_image" name="map_image"/><br>
+          <label for="profile_image">Elevation profile image (SVG):</label>
+          <input type="file" id="profile_image" name="profile_image"/><br>
+          <label for="all">(Optional) name, latitude, longitude, length, elevation:</label>
+          <input type="text" id="all" name="all" placeholder="<name>|<latitude>|<longitude>|<length>|<elevation>" size=50><br>
+          <input type="submit" value="Create"/>
+      </form>
+  </body>
+</html>
