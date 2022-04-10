@@ -73,15 +73,17 @@
               </table>
           </div>
           <div class="input">
-              <datalist id="choices">
-                  {% for choice in choices %}
-                  <option value="{{choice}}">
-                  {% endfor %}
-              </datalist>
-              <input list="choices" id="guess" placeholder="Enter your guess..."/>
+              <form id="guess_form">
+                <datalist id="choices">
+                    {% for choice in choices %}
+                    <option value="{{choice}}">
+                    {% endfor %}
+                </datalist>
+                <input list="choices" id="guess" placeholder="Enter your guess..."/>
+              </form>
           </div>
           <div class="input">
-              <button id="submit">Guess <span>&#127939;</span></button>
+              <button form="guess_form">Guess <span>&#127939;</span></button>
           </div>
       </div>
   </body>
