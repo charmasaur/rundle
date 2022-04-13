@@ -101,15 +101,15 @@ window.onload = function() {
   twemoji.parse(document.body);
   var num_previous_guesses = 0;
 
-  var submit_element = document.getElementById("submit");
+  var guess_form_element = document.getElementById("guess_form");
   var guess_element = document.getElementById("guess");
   var previous_guesses = [];
 
-  submit_element.onclick = function() {
+  guess_form_element.onsubmit = function() {
       var guess = guess_element.value;
       guess_element.value = "";
       if (previous_guesses.includes(guess) || !is_valid_guess(guess)) {
-          return;
+          return false;
       }
       previous_guesses.push(guess);
 
@@ -127,5 +127,7 @@ window.onload = function() {
       num_previous_guesses++;
 
       twemoji.parse(document.body);
+
+      return false;
   };
 }

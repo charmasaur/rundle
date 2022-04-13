@@ -85,6 +85,12 @@ def list():
 def create_get():
     return render_template("create.html")
 
+def try_parse_float(x):
+    try:
+        return float(x)
+    except ValueError:
+        return None
+
 @app.route('/create', methods=['POST'])
 def create_post():
     alls = request.form.get("all")
@@ -98,30 +104,31 @@ def create_post():
             return "Wrong number of parts in combined field", 400
 
         name = bits[0]
-        lat = float(bits[1])
-        lng = float(bits[2])
-        length = float(bits[3])
-        elevation = float(bits[4])
+        lat = bits[1]
+        lng = bits[2]
+        length = bits[3]
+        elevation = bits[4]
     else:
         name = request.form.get("name")
-        if not name:
-            return "No name", 400
         lat = request.form.get("lat")
-        if not lat:
-            return "No latitude", 400
-        lat = float(lat)
         lng = request.form.get("lng")
-        if not lng:
-            return "No longitude", 400
-        lng = float(lng)
         length = request.form.get("length")
-        if not length:
-            return "No length", 400
-        length = float(length)
         elevation = request.form.get("elevation")
-        if elevation is None:
-            return "No elevation", 400
-        elevation = float(elevation)
+
+    if not name:
+        return "No name", 400
+    lat = try_parse_float(lat)
+    if lat is None:
+        return "No latitude", 400
+    lng = try_parse_float(lng)
+    if lng is None:
+        return "No longitude", 400
+    length = try_parse_float(length)
+    if length is None:
+        return "No length", 400
+    elevation = try_parse_float(elevation)
+    if elevation is None:
+        return "No elevation", 400
 
     map_image_file = request.files.get("map_image")
     if not map_image_file:
