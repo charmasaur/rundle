@@ -1,4 +1,3 @@
-library(XML)
 library(sf)
 library(dplyr)
 library(geosphere)
@@ -10,15 +9,15 @@ source("prep_functions.R")
 
 path <- "C:/Users/admin/Documents/Running/_Rundle"
 
-files <- tools::file_path_sans_ext(list.files(path, pattern = "gpx"))
-gpxNames <- file.path(path, paste0(files, ".gpx"))
+gpxNames <- tools::file_path_sans_ext(list.files(path, pattern = "gpx"))
+files <- list.files(path, pattern = "gpx", full.names = T)
 
 # read gpx
-gpx <- map(gpxNames[1:3],
+gpx <- map(files,
            readGPX) %>%
   map(., function(x) x$tracks[[1]]) %>%
   map(., function(x) x[[1]]) %>%
-  set_names(nm = files[1:3]) %>%
+  set_names(nm = gpxNames) %>%
   map(., dplyr::mutate, ele = as.numeric(ele))
 
 # get start locations
@@ -28,29 +27,48 @@ starts <- map(gpx, dplyr::select, lon, lat) %>%
 
 # get distances
 dists <- map(gpx, function(x) gpxDistance(x)) %>%
-  bind_rows(.id = "courseCode")
+  bind_rows(.id = "courseCode") %>%
+  pivot_longer(cols = everything(),
+               names_to = "courseCode",
+               values_to = "dist")
 
 # get elevations
 elevs <- map(gpx, function(x) gpxElevation(x$ele)) %>%
-  bind_rows(.id = "courseCode")
+  bind_rows(.id = "courseCode") %>%
+  pivot_longer(cols = everything(),
+               names_to = "courseCode",
+               values_to = "elev")
+
+# save basic course data
+course.df <- starts %>%
+  left_join(dists, by = "courseCode") %>%
+  left_join(elevs, by = "courseCode") %>%
+  select(courseCode,
+         lat,
+         lon,
+         dist,
+         elev)
+
+write.csv(course.df, file.path(path, "course_overview.csv"))
+
 
 # create plots
-##### Up to here with revisions ######
+## course plot
+map2(gpx, gpxNames, function(x, y) plotCourse(lon = x$lon,
+                                              lat = x$lat,
+                                              courseName = y,
+                                              path = path))
 
+map2(gpx, gpxNames, function(x, y) plotElevation(elev = x$ele,
+                                                      courseName = y,
+                                                      path = path))
 
-# make and save some plots
-starts <- sapply(files, makePlots, path = path)
+# Distance matrix
+starts.sf <- starts %>%
+  st_as_sf(coords = c("lon", "lat"), crs = 4326) %>%
+  st_transform(crs = 3577)
 
-# create a simple features object for distance calcs
-starts.sf <- data.frame(x = starts[1,],
-                        y = starts[2,],
-                        course = colnames(starts)) %>%
-  st_as_sf(coords = c("x", "y"), crs = 4326)
-
-# create a distance matrix
-starts.alb <- st_transform(starts.sf, crs = 3577)
-
-dist.m <- round(st_distance(starts.alb)/1000, 0) %>%
+dist.m <- round(st_distance(starts.sf)/1000, 0) %>%
   units::drop_units()
 
 rownames(dist.m) <- files
@@ -58,17 +76,13 @@ colnames(dist.m) <- files
 
 write.csv(dist.m, file.path(path, "distance_matrix.csv"))
 
-# create a direction matrix
-starts.t <- t(starts)
 
-bear.m <- getBearingsFromCoords(starts.t)
+# Bearing matrix
+starts.m <- matrix(c(starts$lon, starts$lat), ncol = 2)
 
-rownames(bear.m) <- files
-colnames(bear.m) <- files
+bear.m <- getBearingsFromCoords(starts.m)
+
+rownames(bear.m) <- gpxNames
+colnames(bear.m) <- gpxNames
 
 write.csv(bear.m, file.path(path, "bearing_matrix.csv"))
-
-# save start coordinates
-colnames(starts.t) <- c("x", "y")
-
-write.csv(starts.t, file.path(path, "start_coords.csv"))

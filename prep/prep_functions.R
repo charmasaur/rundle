@@ -1,24 +1,24 @@
 getBearingsFromCoords <- function(coords){
-  #coords is a matrix with cols x, y
+  #coords is a matrix with first column lon and second column lat
   #one row for each location
   #names for locations
   
   b.list <- list()
   
   for(i in 1:nrow(coords)){
-    b.list[[i]] <- bearing(coords[i,], coords)
+    b.list[[i]] <- geosphere::bearing(coords[i,], coords)
   }
   
   names(b.list) <- paste0("C", c(1:nrow(coords)))
   
-  b.df <- bind_rows(b.list) %>%
+  b.df <- dplyr::bind_rows(b.list) %>%
     data.matrix()
   
   return(b.df)
   
 }
 
-plotCourse <- function(lon, lat, courseName){
+plotCourse <- function(lon, lat, courseName, path){
   # plot a course map
   # lon = vector of longitudes
   # lat = vector of latitudes
@@ -40,7 +40,7 @@ plotCourse <- function(lon, lat, courseName){
   
 }
 
-plotElevation <- function(elev, courseName, scaled = T){
+plotElevation <- function(elev, courseName, scaled = T, path){
   # plot an elevation profile
   # elev = vector of elevations
   # courseName = name for the course that will be used in the file name
@@ -48,7 +48,7 @@ plotElevation <- function(elev, courseName, scaled = T){
   
   if(scaled){y = elev.l} else {y = elev}
   
-  svg(file.path(path, paste0(file, "_elev_scaled.svg")))
+  svg(file.path(path, paste0(courseName, "_elev_scaled.svg")))
   
   plot(y, 
        type = "l", 
@@ -58,7 +58,7 @@ plotElevation <- function(elev, courseName, scaled = T){
        col = "grey40",
        axes = F,
        lwd = 2,
-       ylim = c(min(y), min(y)+1500))
+       ylim = c(min(y), min(y)+1000))
   
   polygon(c(1, 1:length(y), length(y+1)),
           c(min(y), y, min(y)),
@@ -74,10 +74,10 @@ gpxDistance <- function(lonLatDF){
   # lonLatDF is a data frame with columns 'lon' and 'lat'
   df <- lonLatDF %>%
     dplyr::mutate(nextX = lead(lon, n = 1),
-           nextY = lead(lat, n = 1))
+                  nextY = lead(lat, n = 1))
 
-  dist <- pmap(select(df, lon, lat, nextX, nextY),
-               function(lon, lat, nextX, nextY) raster::pointDistance(c(lon, lat),
+  dist <- purrr::pmap(select(df, lon, lat, nextX, nextY),
+                      function(lon, lat, nextX, nextY) raster::pointDistance(c(lon, lat),
                                      c(nextX, nextY),
                                      lonlat = T)) %>%
     unlist()
@@ -93,4 +93,8 @@ gpxElevation <- function(elev){
   diffE <- elev - nextE
   totalE <- round(sum(diffE[which(diffE > 0)]), 0)
   return(totalE)
+}
+
+getDistanceMatrix <- function(coords){
+  
 }
