@@ -47,7 +47,8 @@ course.df <- starts %>%
          lat,
          lon,
          dist,
-         elev)
+         elev) %>%
+  mutate(concat = paste(lat, lon, dist, elev, sep = "|"))
 
 write.csv(course.df, file.path(path, "course_overview.csv"))
 
