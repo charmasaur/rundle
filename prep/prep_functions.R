@@ -1,102 +1,100 @@
 getBearingsFromCoords <- function(coords){
-  #coords is a matrix with cols x, y
+  #coords is a matrix with first column lon and second column lat
   #one row for each location
   #names for locations
   
   b.list <- list()
   
   for(i in 1:nrow(coords)){
-    b.list[[i]] <- bearing(coords[i,], coords)
+    b.list[[i]] <- geosphere::bearing(coords[i,], coords)
   }
   
   names(b.list) <- paste0("C", c(1:nrow(coords)))
   
-  b.df <- bind_rows(b.list) %>%
+  b.df <- dplyr::bind_rows(b.list) %>%
     data.matrix()
   
   return(b.df)
   
 }
 
-makePlots <- function(file, path){
-  # make a course map, a raw elevation profile, and a scaled elevation profile
-  # file = name of the .gpx file, without the file extension
-  # path = path to folder containing gpx files
+plotCourse <- function(lon, lat, courseName, path){
+  # plot a course map
+  # lon = vector of longitudes
+  # lat = vector of latitudes
+  # courseName = name for the course that will be used in the file name
   
-  # parse xml
-  gfile <- htmlTreeParse(file.path(path, paste0(file, ".gpx")),
-                         useInternalNodes = T)
+  svg(file.path(path, paste0(courseName, "_course.svg")))
   
-  # coords
-  coords <- xpathSApply(gfile, path = "//trkpt", xmlAttrs)
+  plot(rev(lon), 
+       rev(lat), 
+       type = "l", 
+       col = "red", 
+       lwd = 2, 
+       bty = "n",
+       axes = F,
+       xlab = "",
+       ylab = "")
   
-  lats <- as.numeric(coords["lat",])
-  lons <- as.numeric(coords["lon",])
+  dev.off()
   
-  # get start lat/lon
-  start <- c(lons[1], lats[1])
+}
+
+plotElevation <- function(elev, courseName, scaled = T, path){
+  # plot an elevation profile
+  # elev = vector of elevations
+  # courseName = name for the course that will be used in the file name
+  elev.l = lowess(elev, f = 0.001)$y
   
-  # elevation
-  elev <- as.numeric(xpathSApply(gfile, path = "//trkpt/ele", xmlValue))
+  if(scaled){y = elev.l} else {y = elev}
   
-  if(length(elev) != 0){ # sometimes the gpx doesn't have elevation
-    # put into data frame
-    gdf <- data.frame(row = c(1:length(elev)),
-                      elev = elev,
-                      lat = lats,
-                      lon = lons) %>%
-      mutate(elev.l = lowess(elev, f = 0.001)$y)
-    
-    # make some plots
-    ## elevation
-    svg(file.path(path, paste0(file, "_elev.svg")))
-    
-    plot(gdf$elev.l, 
-         type = "l", 
-         bty = "n", 
-         ylab = "", 
-         xlab = "", 
-         col = "grey40",
-         axes = F,
-         lwd = 2)
-    
-    dev.off()
-    
-    ## scaled elevation
-    svg(file.path(path, paste0(file, "_elev_scaled.svg")))
-    
-    plot(gdf$elev.l, 
-         type = "l", 
-         bty = "n", 
-         ylab = "", 
-         xlab = "", 
-         col = "grey40",
-         axes = F,
-         lwd = 2,
-         ylim = c(min(gdf$elev.l), min(gdf$elev.l)+1500))
-    
-    polygon(c(1, 1:nrow(gdf), nrow(gdf)+1),
-            c(min(gdf$elev.l), gdf$elev.l, min(gdf$elev.l)),
-            col="grey", 
-            border=F)
-    
-    dev.off()
-    
-    ## map
-    svg(file.path(path, paste0(file, "_course.svg")))
-    
-    plot(rev(gdf$lon), 
-         rev(gdf$lat), 
-         type = "l", 
-         col = "red", 
-         lwd = 2, 
-         bty = "n",
-         axes = F,
-         xlab = "",
-         ylab = "")
-    
-    dev.off()
-  }
+  svg(file.path(path, paste0(courseName, "_elev_scaled.svg")))
   
-  return(start)
+  plot(y, 
+       type = "l", 
+       bty = "n", 
+       ylab = "", 
+       xlab = "", 
+       col = "grey40",
+       axes = F,
+       lwd = 2,
+       ylim = c(min(y), min(y)+1000))
+  
+  polygon(c(1, 1:length(y), length(y+1)),
+          c(min(y), y, min(y)),
+          col="grey", 
+          border=F)
+  
+  dev.off()
+  
+}
+
+gpxDistance <- function(lonLatDF){
+  # get the course distance
+  # lonLatDF is a data frame with columns 'lon' and 'lat'
+  df <- lonLatDF %>%
+    dplyr::mutate(nextX = lead(lon, n = 1),
+                  nextY = lead(lat, n = 1))
+
+  dist <- purrr::pmap(select(df, lon, lat, nextX, nextY),
+                      function(lon, lat, nextX, nextY) raster::pointDistance(c(lon, lat),
+                                     c(nextX, nextY),
+                                     lonlat = T)) %>%
+    unlist()
+  
+  totalDist <- round(sum(dist, na.rm = T)/1000, 1)
+  
+  return(totalDist)
+}
+
+gpxElevation <- function(elev){
+  # get the course elevation gain
+  nextE <- lead(elev, 1)
+  diffE <- elev - nextE
+  totalE <- round(sum(diffE[which(diffE > 0)]), 0)
+  return(totalE)
+}
+
+getDistanceMatrix <- function(coords){
+  
 }
