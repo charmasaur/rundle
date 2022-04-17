@@ -3,9 +3,9 @@ Rundle uploader
 
 Usage: upload.py [--upload] [--url <URL>] [--id <id>]...
 
---upload    Actually upload data, instead of doing a dry run
---url <URL> URL to which to send the data [default: http://localhost:5000/create]
---id <id1>  Run ID to upload (empty means all, pass multiple --id arguments to upload multiple)
+--upload     Actually upload data, instead of doing a dry run
+--url <URL>  URL to which to send the data [default: http://localhost:5000/create]
+--id <id1>   Run ID to upload (empty means all, pass multiple --id arguments to upload multiple)
 
 Options:
   -h --help     Show this screen.
