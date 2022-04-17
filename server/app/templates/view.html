@@ -16,6 +16,12 @@
       <div>
           {{token}}: {{name}} {{length}}km {{elevation}}m {{latitude}} {{longitude}}<br>
       </div>
+      <div>
+          <form action="{{delete_url}}">
+              <input type="submit" value="Delete" />
+          </form>
+      </div>
+
   </body>
 </html>
 {% endautoescape %}

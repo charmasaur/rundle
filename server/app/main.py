@@ -83,9 +83,8 @@ def list():
         ],
     )
 
-@app.route('/view', methods=['GET'])
-def view():
-    token = request.args.get("token")
+@app.route('/view/<token>', methods=['GET'])
+def view(token):
     if not token:
         return "No token"
     run = Run.query.get(token)
@@ -101,7 +100,19 @@ def view():
         elevation=run.elevation,
         latitude=run.lat,
         longitude=run.lng,
+        delete_url=url_for("delete", token=run.token),
     )
+
+@app.route('/delete/<token>', methods=['GET'])
+def delete(token):
+    if not token:
+        return "No token"
+    run = Run.query.get(token)
+    if not run:
+        return "Run not found"
+    db.session.delete(run)
+    db.session.commit()
+    return "Deleted"
 
 @app.route('/create', methods=['GET'])
 def create_get():
