@@ -3,7 +3,7 @@ import base64
 import random
 import uuid
 
-from flask import render_template, Markup, request
+from flask import render_template, Markup, request, url_for
 from flask_sqlalchemy import SQLAlchemy
 from geographiclib.geodesic import Geodesic
 
@@ -71,14 +71,36 @@ def list():
         "list.html",
         runs=[
             {
+                "token": run.token,
                 "name": run.name,
                 "length": run.length,
                 "elevation": run.elevation,
                 "latitude": run.lat,
                 "longitude": run.lng,
+                "url": url_for("view", token=run.token),
             }
             for run in runs
         ],
+    )
+
+@app.route('/view', methods=['GET'])
+def view():
+    token = request.args.get("token")
+    if not token:
+        return "No token"
+    run = Run.query.get(token)
+    if not run:
+        return "Run not found"
+    return render_template(
+        "view.html",
+        map=image_data(run.map_image),
+        profile=image_data(run.profile_image),
+        token=run.token,
+        name=run.name,
+        length=run.length,
+        elevation=run.elevation,
+        latitude=run.lat,
+        longitude=run.lng,
     )
 
 @app.route('/create', methods=['GET'])

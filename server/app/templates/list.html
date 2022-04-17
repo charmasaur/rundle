@@ -11,7 +11,7 @@
       </h1>
       <div>
           {% for run in runs %}
-          {{run.name}}: {{run.length}}km {{run.elevation}}m {{run.latitude}} {{run.longitude}}<br>
+          <a href={{run.url}}>{{run.token}}: {{run.name}} {{run.length}}km {{run.elevation}}m {{run.latitude}} {{run.longitude}}<br></a>
           {% endfor %}
       </div>
   </body>
