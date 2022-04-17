@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+{% autoescape true %}
+<meta charset="UTF-8">
+<html>
+  <head>
+      <title>Rundle: view run</title>
+  </head>
+  <body>
+      <h1>
+        Rundle: view run
+      </h1>
+      <div>
+          <img class="drawing" src={{map}} width=200 height=200>
+          <img class = "drawing" src={{profile}} width=200 height=200>
+      </div>
+      <div>
+          {{token}}: {{name}} {{length}}km {{elevation}}m {{latitude}} {{longitude}}<br>
+      </div>
+  </body>
+</html>
+{% endautoescape %}
