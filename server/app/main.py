@@ -138,6 +138,7 @@ def create_post():
     if not profile_image_file:
         return "No elevation profile image, 400"
     profile_image = profile_image_file.read()
+    override = bool(request.form.get("override"))
 
     if lat < -90 or lat > 90:
         return "Invalid latitude", 400
@@ -145,19 +146,28 @@ def create_post():
         return "Invalid longitude", 400
 
     # Check for duplicate names
-    if Run.query.filter_by(name=name).count():
-        return "Duplicate name", 400
+    duplicates = Run.query.filter_by(name=name).all()
+    if override and len(duplicates) > 1:
+        return "Tried to override but found multiple runs with the same name", 400
+    if not override and len(duplicates) > 0:
+        return "Duplicate found", 400
 
-    item = Run(
-        name=name,
-        lat=lat,
-        lng=lng,
-        length=length,
-        elevation=elevation,
-        map_image=map_image,
-        profile_image=profile_image,
-    )
-    db.session.add(item)
+    if override and len(duplicates) == 1:
+        item = duplicates[0]
+        msg = "Overrode existing run!"
+    else:
+        item = Run()
+        db.session.add(item)
+        msg = "Created new run!"
+
+    item.name = name
+    item.lat = lat
+    item.lng = lng
+    item.length = length
+    item.elevation = elevation
+    item.map_image = map_image
+    item.profile_image = profile_image
+
     db.session.commit()
 
-    return "Success!"
+    return msg
