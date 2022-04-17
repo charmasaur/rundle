@@ -97,5 +97,4 @@ def generate(upload, url, ids):
 
 if __name__ == '__main__':
     arguments = docopt(__doc__)
-    print(arguments)
     generate(arguments["--upload"], arguments["--url"], arguments["--id"])
