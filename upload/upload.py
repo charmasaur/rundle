@@ -1,11 +1,11 @@
 """
 Rundle uploader
 
-Usage: upload.py [--upload] [--url <URL>] [--count <n>]
+Usage: upload.py [--upload] [--url <URL>] [--id <id>]...
 
---upload     Actually upload data, instead of doing a dry run
---url <URL>  URL to which to send the data [default: http://localhost:5000/create]
---count <n>  Number of runs to upload (0 means all) [default: 0]
+--upload    Actually upload data, instead of doing a dry run
+--url <URL> URL to which to send the data [default: http://localhost:5000/create]
+--id <id1>  Run ID to upload (empty means all, pass multiple --id arguments to upload multiple)
 
 Options:
   -h --help     Show this screen.
@@ -48,7 +48,7 @@ def get_attributes(overview_filename):
             elev=float(row[5]),
         ) for row in rows}
 
-def generate(upload, url, count):
+def generate(upload, url, ids):
     reference_filename = "Rundle/course_reference.xlsx"
     overview_filename = "Rundle/course_overview.csv"
     map_filename_template = "Rundle/course_maps/{}_course.svg"
@@ -57,10 +57,11 @@ def generate(upload, url, count):
     names = get_names(reference_filename)
     attributes = get_attributes(overview_filename)
 
-    if count == 0:
-        count = len(names)
+    if not ids:
+        ids = list(names)
 
-    for id, name in list(names.items())[:count]:
+    for id in ids:
+        name = names[id]
         map_filename = map_filename_template.format(id)
         profile_filename = profile_filename_template.format(id)
 
@@ -96,4 +97,5 @@ def generate(upload, url, count):
 
 if __name__ == '__main__':
     arguments = docopt(__doc__)
-    generate(arguments["--upload"], arguments["--url"], int(arguments["--count"]))
+    print(arguments)
+    generate(arguments["--upload"], arguments["--url"], arguments["--id"])
