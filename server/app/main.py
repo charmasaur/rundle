@@ -131,6 +131,10 @@ def try_read(x):
         return None
     return x.read()
 
+def is_duplicate_name(name, token_to_ignore):
+    """Returns true iff the name is already used (ignoring any run with the specified token)."""
+    return Run.query.filter(Run.token != token_to_ignore, Run.name == name).count() > 0
+
 @app.route('/create', methods=['POST'])
 def create_post():
     token = request.form.get("token")
@@ -138,9 +142,8 @@ def create_post():
         return "No token", 400
 
     name = request.form.get("name")
-    if not name:
-        return "No name", 400
-
+    if name and is_duplicate_name(name, token):
+        return "Duplicate name", 400
     lat = try_parse_float(request.form.get("lat"))
     if lat is not None and (lat < -90 or lat > 90):
         return "Invalid latitude", 400
@@ -153,35 +156,32 @@ def create_post():
     profile_image = try_read(request.files.get("profile_image"))
     override = bool(request.form.get("override"))
 
-    # Check for duplicate names
-    duplicates = Run.query.filter_by(name=name).all()
-    if override and len(duplicates) > 1:
-        return "Tried to override but found multiple runs with the same name", 400
-    if not override and len(duplicates) > 0:
-        return "Duplicate found", 400
+    existing = Run.query.get(token)
+    if existing:
+        if not override:
+            return "Run already exists", 400
 
-    if override and len(duplicates) == 1:
-        item = duplicates[0]
-        item.token = token
-        if name is not None:
-            item.name = name
+        if name:
+            existing.name = name
         if lat is not None:
-            item.lat = lat
+            existing.lat = lat
         if lng is not None:
-            item.lng = lng
+            existing.lng = lng
         if length is not None:
-            item.length = length
+            existing.length = length
         if elevation is not None:
-            item.elevation = elevation
-        if map_image is not None:
-            item.map_image = map_image
-        if profile_image is not None:
-            item.profile_image = profile_image
+            existing.elevation = elevation
+        if map_image:
+            existing.map_image = map_image
+        if profile_image:
+            existing.profile_image = profile_image
 
         db.session.commit()
         return "Overrode existing run!"
 
     # Need all parameters for a new run
+    if not name:
+        return "No name", 400
     if lat is None:
         return "No latitude", 400
     if lng is None:
@@ -190,9 +190,9 @@ def create_post():
         return "No length", 400
     if elevation is None:
         return "No elevation", 400
-    if map_image is None:
+    if not map_image:
         return "No map image", 400
-    if profile_image is None:
+    if not profile_image:
         return "No elevation profile image", 400
 
     item = Run(
