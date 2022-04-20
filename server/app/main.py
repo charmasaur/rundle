@@ -61,6 +61,10 @@ def home():
             for run in runs
         },
         target=target.name,
+        target_details={
+            "length": target.length,
+            "elevation": target.elevation,
+        },
         num_guesses=6,
     )
 

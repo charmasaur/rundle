@@ -41,11 +41,22 @@
         input, button, table {
             width: 100%;
         }
+        button {
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+        div.card {
+            text-align: center;
+            border-style: solid;
+            border-width: thin;
+            border-radius: 2px;
+        }
       </style>
       <script src="https://twemoji.maxcdn.com/v/latest/twemoji.min.js" crossorigin="anonymous"></script>
       <script type="text/javascript">
           var CHOICES = {{choices|tojson|safe}};
           var TARGET = {{target|tojson|safe}};
+          var TARGET_DETAILS = {{target_details|tojson|safe}};
           var NUM_GUESSES = {{num_guesses}};
       </script>
       <script type="text/javascript" src="/static/js/home.js"></script>
@@ -80,10 +91,9 @@
                     {% endfor %}
                 </datalist>
                 <input list="choices" id="guess" placeholder="Enter your guess..."/>
+                <button form="guess_form" id="guess_form_button">Guess <span>&#127939;</span></button>
               </form>
-          </div>
-          <div class="input">
-              <button form="guess_form">Guess <span>&#127939;</span></button>
+              <div id="answer" class="card" hidden="true"></div>
           </div>
       </div>
   </body>
