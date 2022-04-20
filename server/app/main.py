@@ -43,7 +43,7 @@ def compare(x, y):
 
 @app.route('/', methods=['GET'])
 def home():
-    runs = Run.query.all()
+    runs = Run.query.order_by(Run.name).all()
     if not runs:
         return "No runs yet, sorry"
     target = random.choice(runs)
@@ -61,6 +61,10 @@ def home():
             for run in runs
         },
         target=target.name,
+        target_details={
+            "length": target.length,
+            "elevation": target.elevation,
+        },
         num_guesses=6,
     )
 

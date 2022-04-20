@@ -1,3 +1,5 @@
+const DELAY_PER_HINT = 300;
+
 function is_valid_guess(guess) {
     return guess in CHOICES;
 }
@@ -102,10 +104,19 @@ window.onload = function() {
   var num_previous_guesses = 0;
 
   var guess_form_element = document.getElementById("guess_form");
+  var answer_element = document.getElementById("answer");
+  var guess_form_button_element = document.getElementById("guess_form_button");
   var guess_element = document.getElementById("guess");
   var previous_guesses = [];
 
+  var done = false;
+
   guess_form_element.onsubmit = function() {
+      if (done) {
+          // Shouldn't really be necessary, but I don't know what sort of multithreading might be
+          // going on, so best to be defensive.
+          return false;
+      }
       var guess = guess_element.value;
       guess_element.value = "";
       if (previous_guesses.includes(guess) || !is_valid_guess(guess)) {
@@ -121,10 +132,26 @@ window.onload = function() {
         let td = document.getElementById("hint_" + num_previous_guesses + "_" + i);
         td.textContent = hints[i];
         td.style.contentVisibility = 'hidden';
-        setTimeout(function() { td.style.contentVisibility = 'visible'; }, (i+1)*300);
+        setTimeout(function() { td.style.contentVisibility = 'visible'; }, (i+1)*DELAY_PER_HINT);
       }
 
       num_previous_guesses++;
+
+      if (num_previous_guesses == NUM_GUESSES || guess == TARGET) {
+          done = true;
+          guess_form_button_element.disabled = true;
+          setTimeout(function() {
+            guess_form.hidden = true;
+            answer_element.innerHTML =
+                  TARGET
+                  + "<br>" +
+                  TARGET_DETAILS["length"]
+                  + "km "
+                  + TARGET_DETAILS["elevation"]
+                  + "m";
+            answer_element.hidden = false;
+          }, (hints.length + 1) * DELAY_PER_HINT);
+      }
 
       twemoji.parse(document.body);
 
