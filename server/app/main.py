@@ -12,7 +12,7 @@ from app.app import app, db
 class Run(db.Model):
     __tablename__ = "run"
 
-    token = db.Column(db.String, default=lambda: uuid.uuid4().hex, primary_key=True)
+    token = db.Column(db.String, primary_key=True)
     name = db.Column(db.String)
     map_image = db.Column(db.LargeBinary) # SVG
     profile_image = db.Column(db.LargeBinary) # SVG
@@ -119,64 +119,39 @@ def create_get():
     return render_template("create.html")
 
 def try_parse_float(x):
+    if x is None:
+        return None
     try:
         return float(x)
     except ValueError:
         return None
 
+def try_read(x):
+    if x is None:
+        return None
+    return x.read()
+
 @app.route('/create', methods=['POST'])
 def create_post():
-    alls = request.form.get("all")
-    if alls:
-        if any(request.form.get(x)
-               for x in ["name", "lat", "lng", "length", "elevation"]):
-            return "Don't use combined field and individual fields together", 400
+    token = request.form.get("token")
+    if not token:
+        return "No token", 400
 
-        bits = alls.split("|")
-        if len(bits) != 5:
-            return "Wrong number of parts in combined field", 400
-
-        name = bits[0]
-        lat = bits[1]
-        lng = bits[2]
-        length = bits[3]
-        elevation = bits[4]
-    else:
-        name = request.form.get("name")
-        lat = request.form.get("lat")
-        lng = request.form.get("lng")
-        length = request.form.get("length")
-        elevation = request.form.get("elevation")
-
+    name = request.form.get("name")
     if not name:
         return "No name", 400
-    lat = try_parse_float(lat)
-    if lat is None:
-        return "No latitude", 400
-    lng = try_parse_float(lng)
-    if lng is None:
-        return "No longitude", 400
-    length = try_parse_float(length)
-    if length is None:
-        return "No length", 400
-    elevation = try_parse_float(elevation)
-    if elevation is None:
-        return "No elevation", 400
 
-    map_image_file = request.files.get("map_image")
-    if not map_image_file:
-        return "No map image, 400"
-    map_image = map_image_file.read()
-    profile_image_file = request.files.get("profile_image")
-    if not profile_image_file:
-        return "No elevation profile image, 400"
-    profile_image = profile_image_file.read()
-    override = bool(request.form.get("override"))
-
-    if lat < -90 or lat > 90:
+    lat = try_parse_float(request.form.get("lat"))
+    if lat is not None and (lat < -90 or lat > 90):
         return "Invalid latitude", 400
-    if lng < -180 or lng > 180:
+    lng = try_parse_float(request.form.get("lng"))
+    if lng is not None and (lng < -180 or lng > 180):
         return "Invalid longitude", 400
+    length = try_parse_float(request.form.get("length"))
+    elevation = try_parse_float(request.form.get("elevation"))
+    map_image = try_read(request.files.get("map_image"))
+    profile_image = try_read(request.files.get("profile_image"))
+    override = bool(request.form.get("override"))
 
     # Check for duplicate names
     duplicates = Run.query.filter_by(name=name).all()
@@ -187,20 +162,49 @@ def create_post():
 
     if override and len(duplicates) == 1:
         item = duplicates[0]
-        msg = "Overrode existing run!"
-    else:
-        item = Run()
-        db.session.add(item)
-        msg = "Created new run!"
+        item.token = token
+        if name is not None:
+            item.name = name
+        if lat is not None:
+            item.lat = lat
+        if lng is not None:
+            item.lng = lng
+        if length is not None:
+            item.length = length
+        if elevation is not None:
+            item.elevation = elevation
+        if map_image is not None:
+            item.map_image = map_image
+        if profile_image is not None:
+            item.profile_image = profile_image
 
-    item.name = name
-    item.lat = lat
-    item.lng = lng
-    item.length = length
-    item.elevation = elevation
-    item.map_image = map_image
-    item.profile_image = profile_image
+        db.session.commit()
+        return "Overrode existing run!"
 
+    # Need all parameters for a new run
+    if lat is None:
+        return "No latitude", 400
+    if lng is None:
+        return "No longitude", 400
+    if length is None:
+        return "No length", 400
+    if elevation is None:
+        return "No elevation", 400
+    if map_image is None:
+        return "No map image", 400
+    if profile_image is None:
+        return "No elevation profile image", 400
+
+    item = Run(
+        token=token,
+        name=name,
+        lat=lat,
+        lng=lng,
+        length=length,
+        elevation=elevation,
+        map_image=map_image,
+        profile_image=profile_image,
+    )
+    db.session.add(item)
     db.session.commit()
-
-    return msg
+    return "Created new run!"

@@ -2,13 +2,15 @@
 <meta charset="UTF-8">
 <html>
   <head>
-      <title>Rundle: create new run</title>
+      <title>Rundle: create or edit run</title>
   </head>
   <body>
       <h1>
-          Rundle: create new run
+          Rundle: create or edit run
       </h1>
       <form action=create method=post enctype=multipart/form-data>
+          <label for="token">Token:</label>
+          <input type="text" id="token" id="token" name="token"><br>
           <label for="name">Name:</label>
           <input type="text" id="name" id="name" name="name"><br>
           <label for="lat">Latitude:</label>
@@ -25,8 +27,6 @@
           <input type="file" id="profile_image" name="profile_image"/><br>
           <label for="override">Override run with same name:</label>
           <input type="checkbox" id="override" name="override" value="override"><br>
-          <label for="all">(Optional) name, latitude, longitude, length, elevation:</label>
-          <input type="text" id="all" name="all" placeholder="<name>|<latitude>|<longitude>|<length>|<elevation>" size=50><br>
           <input type="submit" value="Create"/>
       </form>
   </body>
