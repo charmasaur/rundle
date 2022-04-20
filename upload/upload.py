@@ -61,7 +61,6 @@ def generate(upload, url, ids):
         ids = list(names)
 
     for id in ids:
-        name = names[id]
         map_filename = map_filename_template.format(id)
         profile_filename = profile_filename_template.format(id)
 
@@ -71,7 +70,8 @@ def generate(upload, url, ids):
 
         files = {"map_image": map_filename, "profile_image": profile_filename}
         data = {
-            "name": name,
+            "token": id,
+            "name": names[id],
             "lat": attributes[id].lat,
             "lng": attributes[id].lng,
             "length": attributes[id].dist,
