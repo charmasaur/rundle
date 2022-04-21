@@ -2,6 +2,6 @@
 
 Yet another Wordle clone.
 
-## Attributes
+## Attributions
 
 Thank you Twitter for the [emoji](https://twemoji.twitter.com/)!
