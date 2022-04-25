@@ -17,6 +17,7 @@
             margin: auto;
         }
         body {
+            position: relative;
             max-width: 500px;
             margin: auto;
             padding: 5px;
@@ -50,6 +51,26 @@
             border-style: solid;
             border-width: thin;
             border-radius: 2px;
+        }
+        .modal {
+            display: flex;
+            position: absolute;
+            z-index: 1;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 20px;
+        }
+        .modal-card {
+            margin: auto;
+            background-color: #ffffff;
+            border-style: solid;
+            border-width: thin;
+            border-radius: 2px;
+            overflow: auto;
+            padding: 10px;
+            width: 100%;
         }
       </style>
       <script src="https://twemoji.maxcdn.com/v/latest/twemoji.min.js" crossorigin="anonymous"></script>
@@ -95,6 +116,25 @@
               </form>
               <div id="answer" class="card" hidden="true"></div>
           </div>
+      </div>
+      <div class="modal">
+        <div id="help" class="modal-card">
+            Guess the run in {{num_guesses}} tries!<br>
+            <br>
+            After each guess, you get hints indicating how good your guess was.<br>
+            <br>
+            <b>Examples</b><br>
+            <table>
+                <tr>
+                    <td>My guess</td>
+                    <td class="hint">a</td>
+                    <td class="hint">b</td>
+                    <td class="hint">c</td>
+                    <td class="hint">d</td>
+                </tr>
+            </table>
+            TODO: Should probably populate this in JS instead...
+        </div>
       </div>
   </body>
 </html>
