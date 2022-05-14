@@ -21,85 +21,187 @@ BEACH = twemoji.convert.fromCodePoint("1f3d6") + twemoji.convert.fromCodePoint("
 PLUS = twemoji.convert.fromCodePoint("2795");
 MINUS = twemoji.convert.fromCodePoint("2796");
 
-function get_text_for_length(x) {
+function get_code_for_length(x) {
     if (x < 0) {
         // Needs to be bigger
-        return PLUS;
+        return "+";
     }
     if (x > 0) {
         // Needs to be smaller
-        return MINUS;
+        return "-";
     }
-    return GREEN;
+    return "=";
 }
 
-function get_text_for_elevation(x) {
+function get_code_for_elevation(x) {
     if (x < 0) {
         // Needs to be bigger
-        return MOUNTAIN;
+        return "+";
     }
     if (x > 0) {
         // Needs to be smaller
-        return BEACH;
+        return "-";
     }
-    return GREEN;
+    return "=";
 }
 
-function get_text_for_distance(x) {
-    if (x == 0) {
-        return GREEN;
+function get_codes_for_distance_and_bearing(distance, bearing) {
+    if (distance == 0) {
+        return ["=","="];
     }
-    return x + "km"
+
+    const half_width = 45/2;
+
+    // Might end up using this if we get unlucky with floating point?
+    var bearing_code = "N";
+
+    if (bearing >= -half_width && bearing < half_width) {
+        bearing_code = "N";
+    }
+    if (bearing >= 45-half_width && bearing < 45+half_width) {
+        bearing_code = "NE";
+    }
+    if (bearing >= 90-half_width && bearing < 90+half_width) {
+        bearing_code = "E";
+    }
+    if (bearing >= 135-half_width && bearing < 135+half_width) {
+        bearing_code = "SE";
+    }
+    if (bearing >= 180-half_width && bearing < -180+half_width) {
+        bearing_code = "S";
+    }
+    if (bearing >= -135-half_width && bearing < -135+half_width) {
+        bearing_code = "SW";
+    }
+    if (bearing >= -90-half_width && bearing < -90+half_width) {
+        bearing_code = "W";
+    }
+    if (bearing >= -45-half_width && bearing < -45+half_width) {
+        bearing_code = "NW";
+    }
+
+    return [distance, bearing_code]
 }
 
-function get_text_for_bearing(x) {
-    var half_width = 45/2;
-
-    if (x >= -half_width && x < half_width) {
-        return UP;
-    }
-    if (x >= 45-half_width && x < 45+half_width) {
-        return UP_RIGHT;
-    }
-    if (x >= 90-half_width && x < 90+half_width) {
-        return RIGHT;
-    }
-    if (x >= 135-half_width && x < 135+half_width) {
-        return DOWN_RIGHT;
-    }
-    if (x >= 180-half_width && x < -180+half_width) {
-        return DOWN;
-    }
-    if (x >= -135-half_width && x < -135+half_width) {
-        return DOWN_LEFT;
-    }
-    if (x >= -90-half_width && x < -90+half_width) {
-        return LEFT;
-    }
-    if (x >= -45-half_width && x < -45+half_width) {
-        return UP_LEFT;
-    }
-    // I guess this could happen if we get unlucky with floating point.
-    return UP_LEFT;
-}
-
-function get_guess_hints(guess) {
+/**
+ * From a guess returns the "hint contents" codes for passing to get_guess_hints.
+ */
+function get_guess_hint_contents(guess) {
     if (guess == TARGET) {
-        return [MEDAL, MEDAL, MEDAL, MEDAL];
+        return ["y", guess, "=", "=", "=", "="];
     }
     var choice = CHOICES[guess];
 
     var result = [];
-
-    result.push(get_text_for_length(choice["length"]));
-    result.push(get_text_for_elevation(choice["elevation"]));
-    result.push(get_text_for_distance(choice["distance"]));
-    result.push(get_text_for_bearing(choice["bearing"]));
+    result.push("n");
+    result.push(guess);
+    result.push(get_code_for_length(choice["length"]));
+    result.push(get_code_for_elevation(choice["elevation"]));
+    result.push(...get_codes_for_distance_and_bearing(choice["distance"], choice["bearing"]));
 
     return result;
 }
 
+/**
+ * Populates a table row with hints, based on the provided hint contents codes.
+ *
+ * The hint contents code takes the form:
+ * [
+ *   <correct (y/n)>,
+ *   <name>,
+ *   <length (+/-/=)>,
+ *   <elevation (+/-/=)>,
+ *   <dist (<x>/=)>,
+ *   <bearing (N/NE/.../=)>,
+ * ]
+ *
+ * Invokes the callback on each cell if provided.
+ */
+function populate_guess_hints(row, hint_contents, callback) {
+    // Mappings from code to the appropriate character for that part of the hint
+    const length_chars = {
+        "+": PLUS,
+        "-": MINUS,
+        "=": GREEN,
+    };
+    const elevation_chars = {
+        "+": MOUNTAIN,
+        "-": BEACH,
+        "=": GREEN,
+    };
+    const bearing_chars = {
+        "N": UP,
+        "NE": UP_RIGHT,
+        "E": RIGHT,
+        "SE": DOWN_RIGHT,
+        "S": DOWN,
+        "SW": DOWN_LEFT,
+        "W": LEFT,
+        "NW": UP_LEFT,
+        "=": GREEN,
+    };
+
+    const done = hint_contents[0] == 'y';
+
+    // Order of the hint parts in the table
+    const funcs = [
+        x => x,
+        x => done ? MEDAL : length_chars[x],
+        x => done ? MEDAL : elevation_chars[x],
+        x => done ? MEDAL : (x == "=" ? GREEN : x + "km"),
+        x => done ? MEDAL : bearing_chars[x],
+    ];
+
+    for (let i = 0; i < row.cells.length; i++) {
+        row.cells[i].textContent = funcs[i](hint_contents[1+i]);
+        if (typeof callback === 'function') {
+            callback(i, row.cells[i]);
+        }
+    }
+}
+
+function get_cookie(name, def) {
+  const cookie = decodeURIComponent(document.cookie);
+  const components = cookie.split("; ");
+  var result = {}
+  for(component of components) {
+      const bits = component.split("=");
+      if (name == bits[0]) {
+          return bits[1];
+      }
+  }
+  return def;
+}
+
+function init_help() {
+  const help = document.getElementById("help");
+  const help_open_display = help.style.display;
+
+  close_help = function() {
+    help.classList.add("hidden");
+  }
+  open_help = function() {
+    help.classList.remove("hidden");
+    document.cookie = "shown_help=true;";
+  }
+
+  document.getElementById("close_help").onclick = close_help;
+  document.getElementById("open_help").onclick = open_help;
+
+  if (get_cookie("shown_help", "false") == "false") {
+    open_help();
+  }
+}
+
 window.onload = function() {
+  init_help();
+
+  // Populate help page.
+  const examples = document.getElementsByName("help_example");
+  for (const example of examples) {
+      populate_guess_hints(example, example.dataset.hintContents.split(","));
+  }
+
   twemoji.parse(document.body);
   var num_previous_guesses = 0;
 
@@ -124,16 +226,17 @@ window.onload = function() {
       }
       previous_guesses.push(guess);
 
-      var hints = get_guess_hints(guess);
-      var previous_guess_element = document.getElementById("previous_guess_" + num_previous_guesses);
-      previous_guess_element.textContent = guess;
+      populate_guess_hints(
+          document.getElementById("hint_" + num_previous_guesses),
+          get_guess_hint_contents(guess),
+          (i, cell) => {
+            if (i == 0) {
+                return;
+            }
+            cell.style.contentVisibility = 'hidden';
+            setTimeout(function() { cell.style.contentVisibility = 'visible'; }, i*DELAY_PER_HINT);
+          });
 
-      for (var i = 0; i < hints.length; i++) {
-        let td = document.getElementById("hint_" + num_previous_guesses + "_" + i);
-        td.textContent = hints[i];
-        td.style.contentVisibility = 'hidden';
-        setTimeout(function() { td.style.contentVisibility = 'visible'; }, (i+1)*DELAY_PER_HINT);
-      }
 
       num_previous_guesses++;
 
@@ -150,7 +253,7 @@ window.onload = function() {
                   + TARGET_DETAILS["elevation"]
                   + "m";
             answer_element.hidden = false;
-          }, (hints.length + 1) * DELAY_PER_HINT);
+          }, document.getElementById("hint_0").cells.length * DELAY_PER_HINT);
       }
 
       twemoji.parse(document.body);

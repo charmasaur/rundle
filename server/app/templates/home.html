@@ -17,6 +17,7 @@
             margin: auto;
         }
         body {
+            position: relative;
             max-width: 500px;
             margin: auto;
             padding: 5px;
@@ -51,6 +52,32 @@
             border-width: thin;
             border-radius: 2px;
         }
+        .modal {
+            display: flex;
+            position: absolute;
+            z-index: 1;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 20px;
+        }
+        .hidden {
+            display: none;
+        }
+        .modal-card {
+            margin: auto;
+            background-color: #ffffff;
+            border-style: solid;
+            border-width: thin;
+            border-radius: 2px;
+            overflow: auto;
+            padding: 10px;
+            width: 100%;
+        }
+        .corner-button {
+            float: right;
+        }
       </style>
       <script src="https://twemoji.maxcdn.com/v/latest/twemoji.min.js" crossorigin="anonymous"></script>
       <script type="text/javascript">
@@ -63,6 +90,9 @@
   </head>
   <body>
       <div>
+          <div id="open_help" class="corner-button">
+              <span>&#10067;</span>
+          </div>
           <h1>
               <span style="color: #ff0000">Run</span>dle
           </h1>
@@ -73,12 +103,12 @@
           <div>
               <table>
                   {% for n in range(num_guesses) %}
-                  <tr>
-                      <td id="previous_guess_{{n}}"></td>
-                      <td id="hint_{{n}}_0" class="hint">&nbsp;</td>
-                      <td id="hint_{{n}}_1" class="hint">&nbsp;</td>
-                      <td id="hint_{{n}}_2" class="hint">&nbsp;</td>
-                      <td id="hint_{{n}}_3" class="hint">&nbsp;</td>
+                  <tr id="hint_{{n}}">
+                      <td></td>
+                      <td class="hint">&nbsp;</td>
+                      <td class="hint">&nbsp;</td>
+                      <td class="hint">&nbsp;</td>
+                      <td class="hint">&nbsp;</td>
                   </tr>
                   {% endfor %}
               </table>
@@ -95,6 +125,52 @@
               </form>
               <div id="answer" class="card" hidden="true"></div>
           </div>
+      </div>
+      <div id="help" class="modal hidden">
+        <div class="modal-card">
+            <div id="close_help" class="corner-button">
+                <span>&#10006;</span>
+            </div>
+            Guess the run in {{num_guesses}} tries!<br>
+            <br>
+            After each guess, you get hints indicating how good your guess was.<br>
+            <br>
+            <b>Examples</b><br>
+            <table>
+                <tr name="help_example" data-hint-contents="n,First guess,+,+,123,NE">
+                    <td></td>
+                    <td class="hint"></td>
+                    <td class="hint"></td>
+                    <td class="hint"></td>
+                    <td class="hint"></td>
+                </tr>
+            </table>
+            Compared to your guess, the real run is longer, has more elevation, and is 123km to the
+            north-east.
+            <p>
+            <table>
+                <tr name="help_example" data-hint-contents="n,Second guess,-,-,=,=">
+                    <td></td>
+                    <td class="hint"></td>
+                    <td class="hint"></td>
+                    <td class="hint"></td>
+                    <td class="hint"></td>
+                </tr>
+            </table>
+            Compared to your guess, the real run is shorter and has less elevation, but starts at
+            the same location.
+            <p>
+            <table>
+                <tr name="help_example" data-hint-contents="y,Third guess,=,=,=,=">
+                    <td></td>
+                    <td class="hint"></td>
+                    <td class="hint"></td>
+                    <td class="hint"></td>
+                    <td class="hint"></td>
+                </tr>
+            </table>
+            You got it!
+        </div>
       </div>
   </body>
 </html>
