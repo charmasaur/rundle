@@ -14,4 +14,4 @@ Edits you make to the code should get picked up the next time you refresh the pa
 
 ## Deployment
 
-Deployment happens automatically on merges to main via a GitHub Action.
+Deployment happens automatically on merges to main via Render.

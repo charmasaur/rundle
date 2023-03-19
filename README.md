@@ -1,6 +1,6 @@
 # rundle
 
-Yet another Wordle clone. Play at https://rundle.herokuapp.com.
+Yet another Wordle clone. Play at https://rundle.onrender.com.
 
 ## Attributions
 
