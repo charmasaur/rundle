@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, date
 import os
 import base64
 import random
@@ -13,7 +13,7 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 
 from app.app import app, db
-from app.loader import RundleDay, load_rundle_day
+from app.loader import RundleDay2, load_rundle_day
 
 @dataclass
 class Choice:
@@ -46,17 +46,34 @@ def compare(x, y):
         return 1
     assert False
 
+def today():
+    return datetime.now(pytz.timezone("Australia/Sydney")).date()
+
+@app.route('/poke', methods=['GET'])
+def poke():
+    if 'date' in request.args:
+        requested_date = date.fromisoformat(request.args['date'])
+    else:
+        requested_date = today()
+
+    day = RundleDay2.query.filter(RundleDay2.date == requested_date).first()
+    if day:
+        return f"Already poked for {requested_date}"
+
+    day = load_rundle_day(requested_date)
+    db.session.add(day)
+    # Could be a race here, but whatever.
+    db.session.commit()
+    return f"Successfully poked for {requested_date}"
+
 @app.route('/', methods=['GET'])
 def home():
-    today = datetime.now(pytz.timezone("Australia/Sydney")).date()
-
-    rundle_day = RundleDay.query.filter(RundleDay.date == today).first()
+    rundle_day = RundleDay2.query.filter(RundleDay2.date <= today()).order_by(RundleDay2.date.desc()).first()
     if not rundle_day:
-        rundle_day = load_rundle_day(today)
+        return "Something went wrong"
 
     choices = {choice["token"]: Choice.create(choice) for choice in rundle_day.choices}
     target = choices[rundle_day.target]
-                                                                                 i
     return render_template(
         "home.html",
         map=image_data(rundle_day.map_image),

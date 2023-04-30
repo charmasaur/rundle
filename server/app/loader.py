@@ -10,8 +10,8 @@ from googleapiclient.http import MediaIoBaseDownload
 from app.app import db
 
 # Record of a single day of Rundle
-class RundleDay(db.Model):
-    key = db.Column(db.String, primary_key=True)
+class RundleDay2(db.Model):
+    key = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.Date)
     target = db.Column(db.String)
     map_image = db.Column(db.LargeBinary) # SVG
@@ -21,9 +21,13 @@ class RundleDay(db.Model):
 SCOPES = [
     'https://www.googleapis.com/auth/spreadsheets.readonly',
     'https://www.googleapis.com/auth/drive.metadata.readonly',
+    'https://www.googleapis.com/auth/drive.readonly',
 ]
 SHEET_COURSES_RANGE = "Courses!A:F"
 SHEET_SEQUENCE_RANGE = "Sequence!A:B"
+
+MAP_IMAGE_FILENAME_PATTERN = "{}_course.svg"
+PROFILE_IMAGE_FILENAME_PATTERN = "{}_elev_scaled.svg"
 
 def load_rundle_day(date):
     creds = service_account.Credentials.from_service_account_file('token.json', scopes=SCOPES)
@@ -43,7 +47,7 @@ def load_rundle_day(date):
     ) = (value_range['values'] for value_range in result['valueRanges'])
 
     if len(courses_data) < 2:
-        raise ValueError("Not enough data")
+        raise ValueError("Not enough data elements")
 
     sequence_map = {date.fromisoformat(entry[0]): entry[1] for entry in sequence_data[1:]}
     if date in sequence_map:
@@ -64,115 +68,40 @@ def load_rundle_day(date):
     # Load images
 
     drive = build('drive', 'v3', credentials=creds).files()
+    result = drive.list(spaces='drive', q=f"name contains '{target}'").execute()
 
-    # TODO: Fetch correct `target` images from Drive
+    files = result['files']
 
+    if len(files) != 2:
+        raise ValueError(f"Incorrect files: {files}")
 
-    item = Run(
-        token=token,
-        name=name,
-        lat=lat,
-        lng=lng,
-        length=length,
-        elevation=elevation,
+    file_map = {file['name']: file['id'] for file in files}
+
+    map_image_filename = MAP_IMAGE_FILENAME_PATTERN.format(target)
+    profile_image_filename = PROFILE_IMAGE_FILENAME_PATTERN.format(target)
+
+    if map_image_filename not in file_map or profile_image_filename not in file_map:
+        raise ValueError(f"Incorrect files: {files}")
+
+    map_image = download_image(drive, file_map[map_image_filename])
+    profile_image = download_image(drive, file_map[profile_image_filename])
+
+    day = RundleDay2(
+        date=date,
+        target=target,
         map_image=map_image,
         profile_image=profile_image,
-    )
-    db.session.add(item)
-    db.session.commit()
-    return "Created new run!"
+        choices=choices)
+
+    return day
+
+def download_image(drive, file_id):
+    file_resource = drive.get_media(fileId=file_id)
+    data = io.BytesIO()
+    MediaIoBaseDownload(data, file_resource).next_chunk()
+    data.seek(0)
+    return data.read()
 
     # We could get races here and end up with duplicate days in the DB, but it doesn't really
     # matter
     return None
-
-def try_parse_float(x):
-    if x is None:
-        return None
-    try:
-        return float(x)
-    except ValueError:
-        return None
-
-def try_read(x):
-    if x is None:
-        return None
-    return x.read()
-
-def is_duplicate_name(name, token_to_ignore):
-    """Returns true iff the name is already used (ignoring any run with the specified token)."""
-    return Run.query.filter(Run.token != token_to_ignore, Run.name == name).count() > 0
-
-@app.route('/create', methods=['POST'])
-def create_post():
-    token = request.form.get("token")
-    if not token:
-        return "No token", 400
-
-    name = request.form.get("name")
-    if name and is_duplicate_name(name, token):
-        return "Duplicate name", 400
-    lat = try_parse_float(request.form.get("lat"))
-    if lat is not None and (lat < -90 or lat > 90):
-        return "Invalid latitude", 400
-    lng = try_parse_float(request.form.get("lng"))
-    if lng is not None and (lng < -180 or lng > 180):
-        return "Invalid longitude", 400
-    length = try_parse_float(request.form.get("length"))
-    elevation = try_parse_float(request.form.get("elevation"))
-    map_image = try_read(request.files.get("map_image"))
-    profile_image = try_read(request.files.get("profile_image"))
-    override = bool(request.form.get("override"))
-
-    existing = Run.query.get(token)
-    if existing:
-        if not override:
-            return "Run already exists", 400
-
-        if name:
-            existing.name = name
-        if lat is not None:
-            existing.lat = lat
-        if lng is not None:
-            existing.lng = lng
-        if length is not None:
-            existing.length = length
-        if elevation is not None:
-            existing.elevation = elevation
-        if map_image:
-            existing.map_image = map_image
-        if profile_image:
-            existing.profile_image = profile_image
-
-        db.session.commit()
-        return "Overrode existing run!"
-
-    # Need all parameters for a new run
-    if not name:
-        return "No name", 400
-    if lat is None:
-        return "No latitude", 400
-    if lng is None:
-        return "No longitude", 400
-    if length is None:
-        return "No length", 400
-    if elevation is None:
-        return "No elevation", 400
-    if not map_image:
-        return "No map image", 400
-    if not profile_image:
-        return "No elevation profile image", 400
-
-    item = Run(
-        token=token,
-        name=name,
-        lat=lat,
-        lng=lng,
-        length=length,
-        elevation=elevation,
-        map_image=map_image,
-        profile_image=profile_image,
-    )
-    db.session.add(item)
-    db.session.commit()
-    return "Created new run!"
