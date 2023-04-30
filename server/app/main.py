@@ -49,7 +49,7 @@ def compare(x, y):
 def today():
     return datetime.now(pytz.timezone("Australia/Sydney")).date()
 
-@app.route('/poke', methods=['GET'])
+@app.route('/poke', methods=['POST'])
 def poke():
     if 'date' in request.args:
         requested_date = date.fromisoformat(request.args['date'])
