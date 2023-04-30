@@ -1,7 +1,9 @@
 # Server
 
 The Dockerfile encapsulates the main part of the server. It assumes access to environent variables
-`DATABASE_URL` (URL for an external SQL database) and `PORT` (port on which the server will run).
+`DATABASE_URL` (URL for an external SQL database), `PORT` (port on which the server will run)
+and `SHEET_ID` (Google Sheets spreadsheet ID where the data lives), and to a file `token.json` with
+the relevant Google Sheets credentials.
 
 ## Local development
 

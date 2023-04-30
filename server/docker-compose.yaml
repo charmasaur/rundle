@@ -9,6 +9,7 @@ services:
       - 5000:5000
     env_file:
       - ./env.dev
+      - ./env_secret.dev
     # Use dev server for development instead of gunicorn, since it seems to
     # see code changes more promptly.
     command: ["python", "manage.py", "run", "--host", "0.0.0.0"]

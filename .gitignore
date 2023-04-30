@@ -2,3 +2,5 @@ __pycache__
 *.Rhistory
 env
 Rundle
+token.json
+env_secret.dev
