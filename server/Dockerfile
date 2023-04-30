@@ -13,7 +13,4 @@ RUN pip install -r requirements.txt
 
 COPY . /usr/src/app/
 
-RUN useradd -m myuser
-USER myuser
-
 CMD gunicorn --bind 0.0.0.0:$PORT wsgi
