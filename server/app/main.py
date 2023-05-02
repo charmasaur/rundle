@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime, date
+from functools import lru_cache
+import hashlib
 import os
 import base64
 import random
@@ -94,3 +96,13 @@ def home():
         },
         num_guesses=6,
     )
+
+
+@app.template_filter('version')
+@lru_cache
+def version(filename):
+    h = hashlib.sha1()
+    path = f"app{filename}"
+    with open(path, "rb") as f:
+        h.update(f.read())
+    return f"{filename}?v={h.hexdigest()}"
