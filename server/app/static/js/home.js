@@ -160,17 +160,39 @@ function populate_guess_hints(row, hint_contents, callback) {
     }
 }
 
-function get_cookie(name, def) {
-  const cookie = decodeURIComponent(document.cookie);
-  const components = cookie.split("; ");
-  var result = {}
-  for(component of components) {
-      const bits = component.split("=");
-      if (name == bits[0]) {
-          return bits[1];
-      }
+function get_storage_item(name, def) {
+  if (!is_storage_available()) {
+    return def;
   }
-  return def;
+  var result = localStorage.getItem(name);
+  if (result === null) {
+    return def;
+  }
+  return result;
+}
+
+function remove_storage_item(name) {
+  if (!is_storage_available()) {
+    return;
+  }
+  localStorage.removeItem(name);
+}
+
+function put_storage_item(name, val) {
+  if (!is_storage_available()) {
+    return;
+  }
+  localStorage.setItem(name, val);
+}
+
+function is_storage_available() {
+  try {
+    localStorage.setItem("test", "test");
+    localStorage.removeItem("test");
+    return true;
+  } catch(e) {
+    return false;
+  }
 }
 
 function init_help() {
@@ -182,13 +204,13 @@ function init_help() {
   }
   open_help = function() {
     help.classList.remove("hidden");
-    document.cookie = "shown_help=true;";
+    put_storage_item("shown_help", true);
   }
 
   document.getElementById("close_help").onclick = close_help;
   document.getElementById("open_help").onclick = open_help;
 
-  if (get_cookie("shown_help", "false") == "false") {
+  if (!get_storage_item("shown_help", false)) {
     open_help();
   }
 }
