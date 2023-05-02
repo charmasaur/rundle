@@ -210,9 +210,21 @@ function init_help() {
   document.getElementById("close_help").onclick = close_help;
   document.getElementById("open_help").onclick = open_help;
 
-  if (!get_storage_item("shown_help", false)) {
+  if (get_storage_item("shown_help", "false") == "false") {
     open_help();
   }
+}
+
+function save_state(guesses) {
+  put_storage_item("guesses", JSON.stringify(guesses));
+  put_storage_item("date", RUN_DATE);
+}
+
+function load_state() {
+  if (get_storage_item("date", "") == RUN_DATE) {
+    return JSON.parse(get_storage_item("guesses", "[]"))
+  }
+  return [];
 }
 
 window.onload = function() {
@@ -224,7 +236,6 @@ window.onload = function() {
       populate_guess_hints(example, example.dataset.hintContents.split(","));
   }
 
-  twemoji.parse(document.body);
   var num_previous_guesses = 0;
 
   var guess_form_element = document.getElementById("guess_form");
@@ -292,6 +303,14 @@ window.onload = function() {
 
       twemoji.parse(document.body);
 
+      save_state(previous_guesses);
+
       return false;
   };
+
+  for (const guess of load_state()) {
+    apply_guess(guess, false);
+  }
+
+  twemoji.parse(document.body);
 }

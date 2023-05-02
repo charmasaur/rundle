@@ -95,6 +95,7 @@ def home():
             "elevation": target.elevation,
         },
         num_guesses=6,
+        run_date=today().isoformat(),
     )
 
 
