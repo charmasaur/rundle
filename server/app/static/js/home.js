@@ -235,13 +235,7 @@ window.onload = function() {
 
   var done = false;
 
-  guess_form_element.onsubmit = function() {
-      if (done) {
-          // Shouldn't really be necessary, but I don't know what sort of multithreading might be
-          // going on, so best to be defensive.
-          return false;
-      }
-      var guess = guess_element.value;
+  apply_guess = function(guess, with_delay) {
       guess_element.value = "";
       if (previous_guesses.includes(guess) || !is_valid_guess(guess)) {
           return false;
@@ -255,28 +249,46 @@ window.onload = function() {
             if (i == 0) {
                 return;
             }
-            cell.style.contentVisibility = 'hidden';
-            setTimeout(function() { cell.style.contentVisibility = 'visible'; }, i*DELAY_PER_HINT);
+            if (with_delay) {
+              cell.style.contentVisibility = 'hidden';
+              setTimeout(function() { cell.style.contentVisibility = 'visible'; }, i*DELAY_PER_HINT);
+            } else {
+              cell.style.contentVisibility = 'visible';
+            }
           });
-
 
       num_previous_guesses++;
 
       if (num_previous_guesses == NUM_GUESSES || guess == TARGET) {
           done = true;
           guess_form_button_element.disabled = true;
-          setTimeout(function() {
-            guess_form.hidden = true;
-            answer_element.innerHTML =
+          show_answer = function() {
+              guess_form.hidden = true;
+              answer_element.innerHTML =
                   TARGET
                   + "<br>" +
                   TARGET_DETAILS["length"]
                   + "km "
                   + TARGET_DETAILS["elevation"]
                   + "m";
-            answer_element.hidden = false;
-          }, document.getElementById("hint_0").cells.length * DELAY_PER_HINT);
+              answer_element.hidden = false;
+          };
+          if (with_delay) {
+            setTimeout(show_answer, document.getElementById("hint_0").cells.length * DELAY_PER_HINT);
+          } else {
+            show_answer();
+          }
       }
+  };
+
+  guess_form_element.onsubmit = function() {
+      if (done) {
+          // Shouldn't really be necessary, but I don't know what sort of multithreading might be
+          // going on, so best to be defensive.
+          return false;
+      }
+      var guess = guess_element.value;
+      apply_guess(guess, true);
 
       twemoji.parse(document.body);
 
