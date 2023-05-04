@@ -15,7 +15,7 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 
 from app.app import app, db
-from app.loader import RundleDay2, load_rundle_day
+from app.loader import RundleDay2, load_rundle_day, load_rundle_day_from_token
 
 @dataclass
 class Choice:
@@ -48,32 +48,32 @@ def compare(x, y):
         return 1
     assert False
 
+### Rendering
+
 def today():
     return datetime.now(pytz.timezone("Australia/Sydney")).date()
 
-@app.route('/poke', methods=['POST'])
-def poke():
-    if 'date' in request.args:
-        requested_date = date.fromisoformat(request.args['date'])
-    else:
-        requested_date = today()
-
-    day = RundleDay2.query.filter(RundleDay2.date == requested_date).first()
-    if day:
-        return f"Already poked for {requested_date}"
-
-    day = load_rundle_day(requested_date)
-    db.session.add(day)
-    # Could be a race here, but whatever.
-    db.session.commit()
-    return f"Successfully poked for {requested_date}"
-
 @app.route('/', methods=['GET'])
 def home():
+    return render_today();
+
+@app.route('/debug', methods=['GET'])
+def debug():
+    if 'date' in request.args:
+        return render_rundle_day(load_rundle_day(date.fromisoformat(request.args['date'])))
+    elif 'token' in request.args:
+        return render_rundle_day(load_rundle_day_from_token(
+            date.fromisoformat("1990-01-01"), request.args['token']))
+    else:
+        return render_today()
+
+def render_today():
     rundle_day = RundleDay2.query.filter(RundleDay2.date <= today()).order_by(RundleDay2.date.desc()).first()
     if not rundle_day:
         return "Something went wrong"
+    return render_rundle_day(rundle_day)
 
+def render_rundle_day(rundle_day):
     choices = {choice["token"]: Choice.create(choice) for choice in rundle_day.choices}
     target = choices[rundle_day.target]
     return render_template(
@@ -95,9 +95,41 @@ def home():
             "elevation": target.elevation,
         },
         num_guesses=6,
-        run_date=today().isoformat(),
+        run_date=rundle_day.date.isoformat(),
     )
 
+### Poking
+
+@app.route('/poke', methods=['POST'])
+def poke():
+    if 'date' in request.args:
+        requested_date = date.fromisoformat(request.args['date'])
+    else:
+        requested_date = today()
+
+    return poke_date(requested_date)
+
+@app.route('/debug/poke', methods=['GET'])
+def debugpoke():
+    if 'date' in request.args:
+        requested_date = date.fromisoformat(request.args['date'])
+    else:
+        requested_date = today()
+
+    return poke_date(date.fromisoformat(request.args['date']))
+
+def poke_date(requested_date):
+    day = RundleDay2.query.filter(RundleDay2.date == requested_date).first()
+    if day:
+        return f"Already poked for {requested_date}"
+
+    day = load_rundle_day(requested_date)
+    db.session.add(day)
+    # Could be a race here, but whatever.
+    db.session.commit()
+    return f"Successfully poked for {requested_date}"
+
+### Versioning JS
 
 @app.template_filter('version')
 @lru_cache

@@ -30,11 +30,54 @@ MAP_IMAGE_FILENAME_PATTERN = "{}_course.svg"
 PROFILE_IMAGE_FILENAME_PATTERN = "{}_elev_scaled.svg"
 
 def load_rundle_day(date):
-    creds = service_account.Credentials.from_service_account_file('token.json', scopes=SCOPES)
-    
-    # Load courses and today's target
+    """Fetches the sequence, and loads the RundleDay for the specified date."""
+    courses_data, sequence_data = load_courses_and_sequence()
 
-    sheet = build('sheets', 'v4', credentials=creds).spreadsheets()
+    sequence_map = {date.fromisoformat(entry[0]): entry[1] for entry in sequence_data}
+    if date in sequence_map:
+        target = sequence_map[date]
+    else:
+        raise ValueError("Date not configured")
+
+    return create_rundle_day(date, target, courses_data)
+
+def load_rundle_day_from_token(date, target):
+    """
+    Loads the RundleDay for the specified target token, using the specified date as a placeholder
+    (but not looking it up in the sequence).
+    """
+    courses_data, sequence_data = load_courses_and_sequence()
+
+    return create_rundle_day(date, target, courses_data)
+
+def create_rundle_day(date, target, courses_data):
+    map_image, profile_image = load_image_data(target)
+
+    courses =  [
+        {"token": course[0],
+         "name": course[1],
+         "lat": float(course[2]),
+         "lng": float(course[3]),
+         "dist": float(course[4]),
+         "elev": float(course[5]),
+         } for course in courses_data]
+
+    day = RundleDay2(
+        date=date,
+        target=target,
+        map_image=map_image,
+        profile_image=profile_image,
+        choices=courses)
+
+    return day
+
+def load_courses_and_sequence():
+    """
+    Returns a tuple (courses, sequence), which are lists of (non-heading) rows from the corresonding
+    sheets.
+    """
+
+    sheet = build('sheets', 'v4', credentials=get_creds()).spreadsheets()
     sheet_id = os.getenv("SHEET_ID", "")
     result = sheet.values().batchGet(
         spreadsheetId=sheet_id,
@@ -49,26 +92,13 @@ def load_rundle_day(date):
     if len(courses_data) < 2:
         raise ValueError("Not enough data elements")
 
-    sequence_map = {date.fromisoformat(entry[0]): entry[1] for entry in sequence_data[1:]}
-    if date in sequence_map:
-        target = sequence_map[date]
-    else:
-        # Uh oh, no specified entry for this date. Use a random course.
-        target = random.choice(courses_data[1:])[0]
+    return courses_data[1:], sequence_data[1:]
 
-    choices = [
-        {"token": course[0],
-         "name": course[1],
-         "lat": float(course[2]),
-         "lng": float(course[3]),
-         "dist": float(course[4]),
-         "elev": float(course[5]),
-         } for course in courses_data[1:]]
+def load_image_data(token):
+    """Returns (map_image, profile_image) bytes for the given token."""
 
-    # Load images
-
-    drive = build('drive', 'v3', credentials=creds).files()
-    result = drive.list(spaces='drive', q=f"name contains '{target}'").execute()
+    drive = build('drive', 'v3', credentials=get_creds()).files()
+    result = drive.list(spaces='drive', q=f"name contains '{token}'").execute()
 
     files = result['files']
 
@@ -77,8 +107,8 @@ def load_rundle_day(date):
 
     file_map = {file['name']: file['id'] for file in files}
 
-    map_image_filename = MAP_IMAGE_FILENAME_PATTERN.format(target)
-    profile_image_filename = PROFILE_IMAGE_FILENAME_PATTERN.format(target)
+    map_image_filename = MAP_IMAGE_FILENAME_PATTERN.format(token)
+    profile_image_filename = PROFILE_IMAGE_FILENAME_PATTERN.format(token)
 
     if map_image_filename not in file_map or profile_image_filename not in file_map:
         raise ValueError(f"Incorrect files: {files}")
@@ -86,14 +116,7 @@ def load_rundle_day(date):
     map_image = download_image(drive, file_map[map_image_filename])
     profile_image = download_image(drive, file_map[profile_image_filename])
 
-    day = RundleDay2(
-        date=date,
-        target=target,
-        map_image=map_image,
-        profile_image=profile_image,
-        choices=choices)
-
-    return day
+    return map_image, profile_image
 
 def download_image(drive, file_id):
     file_resource = drive.get_media(fileId=file_id)
@@ -105,3 +128,6 @@ def download_image(drive, file_id):
     # We could get races here and end up with duplicate days in the DB, but it doesn't really
     # matter
     return None
+
+def get_creds():
+    return service_account.Credentials.from_service_account_file('token.json', scopes=SCOPES)

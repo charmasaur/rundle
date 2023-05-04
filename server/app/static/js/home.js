@@ -67,7 +67,7 @@ function get_codes_for_distance_and_bearing(distance, bearing) {
     if (bearing >= 135-half_width && bearing < 135+half_width) {
         bearing_code = "SE";
     }
-    if (bearing >= 180-half_width && bearing < -180+half_width) {
+    if (bearing >= 180-half_width || bearing < -180+half_width) {
         bearing_code = "S";
     }
     if (bearing >= -135-half_width && bearing < -135+half_width) {
