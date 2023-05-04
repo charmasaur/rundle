@@ -227,6 +227,21 @@ function load_state() {
   return [];
 }
 
+function save_history(guesses, success) {
+  new_history_item = {
+      "date": RUN_DATE,
+      "success": success,
+      "guesses": guesses,
+      "target": TARGET,
+      "target_details": TARGET_DETAILS,
+      "num_guesses": NUM_GUESSES,
+  }
+
+  rundle_history = JSON.parse(get_storage_item("rundle_history", "[]"));
+  rundle_history.push(new_history_item);
+  put_storage_item("rundle_history", JSON.stringify(rundle_history));
+}
+
 window.onload = function() {
   init_help();
 
@@ -289,6 +304,8 @@ window.onload = function() {
           } else {
             show_answer();
           }
+
+          save_history(previous_guesses, guess == TARGET);
       }
   };
 

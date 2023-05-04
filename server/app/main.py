@@ -93,6 +93,8 @@ def render_rundle_day(rundle_day):
         target_details={
             "length": target.length,
             "elevation": target.elevation,
+            "lat": target.lat,
+            "lng": target.lng,
         },
         num_guesses=6,
         run_date=rundle_day.date.isoformat(),
