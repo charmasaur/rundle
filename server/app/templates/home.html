@@ -39,6 +39,10 @@
             width: 12%;
             text-align: center;
         }
+        td.statslabel {
+            width: 50%;
+            text-align: center;
+        }
         input, button, table {
             width: 100%;
         }
@@ -78,6 +82,9 @@
         .corner-button {
             float: right;
         }
+        span.icon {
+            font-size: 24px;
+        }
       </style>
       <script src="https://twemoji.maxcdn.com/v/latest/twemoji.min.js" crossorigin="anonymous"></script>
       <script type="text/javascript">
@@ -92,7 +99,10 @@
   <body>
       <div>
           <div id="open_help" class="corner-button">
-              <span>&#10067;</span>
+              <span class="icon">&#10067;</span>
+          </div>
+          <div id="open_stats" class="corner-button">
+              <span class="icon">&#128202;</span>
           </div>
           <h1>
               <span style="color: #ff0000">Run</span>dle
@@ -171,6 +181,29 @@
                 </tr>
             </table>
             You got it!
+        </div>
+      </div>
+      <div id="stats" class="modal hidden">
+        <div class="modal-card">
+            <div id="close_stats" class="corner-button">
+                <span>&#10006;</span>
+            </div>
+            <b>Stats</b><br>
+            <br>
+            <table>
+                <tr>
+                    <td class="statslabel">Played</td>
+                    <td id="stats_played"></td>
+                </tr>
+                <tr>
+                    <td class="statslabel">Current streak</td>
+                    <td id="stats_streak"></td>
+                </tr>
+                <tr>
+                    <td class="statslabel">Win %</td>
+                    <td id="stats_win"></td>
+                </tr>
+            </table>
         </div>
       </div>
   </body>

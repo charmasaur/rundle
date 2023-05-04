@@ -1,4 +1,5 @@
 const DELAY_PER_HINT = 300;
+const STATS_DELAY = 500;
 
 function is_valid_guess(guess) {
     return guess in CHOICES;
@@ -215,6 +216,55 @@ function init_help() {
   }
 }
 
+function populate_stats(history) {
+  const played = history.length;
+  const played_dates = history.map(h => h["date"]);
+
+  const won_days = history.filter(h => h["success"] == true);
+  const won = won_days.length;
+  const won_dates = won_days.map(h => h["date"]);
+
+  var latest_day = new Date(RUN_DATE);
+  if (!played_dates.includes(RUN_DATE) && played_dates.length > 0) {
+    // If we haven't played yet today, but have played before, start the streak from the latest
+    // played.
+    latest_day = new Date(
+        history.reduce((latest, h) => latest > h["date"] ? latest : h["date"], ""));
+  }
+  var streak = 0;
+  while (won_dates.includes(latest_day.toISOString().substr(0, 10))) {
+      streak++;
+      latest_day.setDate(latest_day.getDate() - 1);
+  }
+
+  document.getElementById("stats_played").textContent = played;
+  document.getElementById("stats_win").textContent =
+        played == 0 ? 0 : ((won/played)*100).toFixed(0);
+  document.getElementById("stats_streak").textContent = streak;
+}
+
+function show_stats() {
+  const stats = document.getElementById("stats");
+  stats.classList.remove("hidden");
+}
+
+function init_stats() {
+  const stats = document.getElementById("stats");
+  const stats_open_display = stats.style.display;
+
+  populate_stats(load_history());
+
+  close_stats = function() {
+    stats.classList.add("hidden");
+  }
+  open_stats = function() {
+    show_stats();
+  }
+
+  document.getElementById("close_stats").onclick = close_stats;
+  document.getElementById("open_stats").onclick = open_stats;
+}
+
 function save_state(guesses) {
   put_storage_item("guesses", JSON.stringify(guesses));
   put_storage_item("date", RUN_DATE);
@@ -227,7 +277,11 @@ function load_state() {
   return [];
 }
 
-function save_history(guesses, success) {
+function load_history() {
+  return JSON.parse(get_storage_item("rundle_history", "[]"));
+}
+
+function update_history(guesses, success) {
   new_history_item = {
       "date": RUN_DATE,
       "success": success,
@@ -237,13 +291,21 @@ function save_history(guesses, success) {
       "num_guesses": NUM_GUESSES,
   }
 
-  rundle_history = JSON.parse(get_storage_item("rundle_history", "[]"));
-  rundle_history.push(new_history_item);
+  rundle_history = load_history()
+  // If we already have history for today, replace it to avoid messing up stats.
+  const index = rundle_history.findIndex(h => h["date"] == RUN_DATE);
+  if (index >= 0) {
+    rundle_history.splice(index, 1, new_history_item);
+  } else {
+    rundle_history.push(new_history_item);
+  }
   put_storage_item("rundle_history", JSON.stringify(rundle_history));
+  populate_stats(rundle_history);
 }
 
 window.onload = function() {
   init_help();
+  init_stats();
 
   // Populate help page.
   const examples = document.getElementsByName("help_example");
@@ -261,7 +323,7 @@ window.onload = function() {
 
   var done = false;
 
-  apply_guess = function(guess, with_delay) {
+  apply_guess = function(guess, is_realtime) {
       guess_element.value = "";
       if (previous_guesses.includes(guess) || !is_valid_guess(guess)) {
           return false;
@@ -275,7 +337,7 @@ window.onload = function() {
             if (i == 0) {
                 return;
             }
-            if (with_delay) {
+            if (is_realtime) {
               cell.style.contentVisibility = 'hidden';
               setTimeout(function() { cell.style.contentVisibility = 'visible'; }, i*DELAY_PER_HINT);
             } else {
@@ -299,13 +361,15 @@ window.onload = function() {
                   + "m";
               answer_element.hidden = false;
           };
-          if (with_delay) {
-            setTimeout(show_answer, document.getElementById("hint_0").cells.length * DELAY_PER_HINT);
+          if (is_realtime) {
+            const answer_delay = document.getElementById("hint_0").cells.length * DELAY_PER_HINT
+            setTimeout(show_answer, answer_delay);
+            setTimeout(show_stats, answer_delay + STATS_DELAY);
+            update_history(previous_guesses, guess == TARGET);
           } else {
             show_answer();
           }
 
-          save_history(previous_guesses, guess == TARGET);
       }
   };
 
