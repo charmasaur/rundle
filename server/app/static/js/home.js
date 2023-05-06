@@ -288,13 +288,15 @@ function init_share(guesses) {
       result.push(row.join(" "));
     }
 
-    navigator.clipboard.writeText(result.join("\n"));
-    button.classList.add("hidden");
-    toast.classList.remove("hidden");
-    setTimeout(() => {
-        toast.classList.add("hidden");
-        button.classList.remove("hidden");
-    }, TOAST_DELAY);
+    navigator.clipboard.writeText(result.join("\n"))
+      .then(() => {
+          button.classList.add("hidden");
+          toast.classList.remove("hidden");
+          setTimeout(() => {
+              toast.classList.add("hidden");
+              button.classList.remove("hidden");
+          }, TOAST_DELAY);
+      });
   }
 
   document.getElementById("share_container").classList.remove("hidden");
