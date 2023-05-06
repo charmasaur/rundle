@@ -43,12 +43,23 @@
             width: 50%;
             text-align: center;
         }
-        input, button, table {
+        td.statsvalue {
+            width: 50%;
+            text-align: center;
+        }
+        input, table {
             width: 100%;
         }
         button {
             margin-top: 5px;
             margin-bottom: 5px;
+        }
+        button.guess {
+            width: 100%;
+        }
+        div.share_container{
+            text-align: center;
+            margin-top: 3px;
         }
         div.card {
             text-align: center;
@@ -82,6 +93,11 @@
         .corner-button {
             float: right;
         }
+        .corner-button-container {
+            position: absolute;
+            right: 6px;
+            margin-top: 4px;
+        }
         span.icon {
             font-size: 24px;
         }
@@ -98,11 +114,13 @@
   </head>
   <body>
       <div>
-          <div id="open_help" class="corner-button">
-              <span class="icon">&#10067;</span>
-          </div>
-          <div id="open_stats" class="corner-button">
-              <span class="icon">&#128202;</span>
+          <div class="corner-button-container">
+            <div id="open_help" class="corner-button">
+                <span class="icon">&#10067;</span>
+            </div>
+            <div id="open_stats" class="corner-button">
+                <span class="icon">&#128202;</span>
+            </div>
           </div>
           <h1>
               <span style="color: #ff0000">Run</span>dle
@@ -132,7 +150,7 @@
                     {% endfor %}
                 </datalist>
                 <input list="choices" id="guess" placeholder="Enter your guess..."/>
-                <button form="guess_form" id="guess_form_button">Guess <span>&#127939;</span></button>
+                <button class="guess" form="guess_form" id="guess_form_button">Guess <span>&#127939;</span></button>
               </form>
               <div id="answer" class="card" hidden="true"></div>
           </div>
@@ -193,21 +211,25 @@
             <table>
                 <tr>
                     <td class="statslabel">Played</td>
-                    <td id="stats_played"></td>
+                    <td class="statsvalue" id="stats_played"></td>
                 </tr>
                 <tr>
                     <td class="statslabel">Win %</td>
-                    <td id="stats_win"></td>
+                    <td class="statsvalue" id="stats_win"></td>
                 </tr>
                 <tr>
                     <td class="statslabel">Current streak</td>
-                    <td id="stats_current_streak"></td>
+                    <td class="statsvalue" id="stats_current_streak"></td>
                 </tr>
                 <tr>
                     <td class="statslabel">Best streak</td>
-                    <td id="stats_best_streak"></td>
+                    <td class="statsvalue" id="stats_best_streak"></td>
                 </tr>
             </table>
+            <div id="share_container" class="share_container hidden">
+                <button id="share_button">Share <span>&#128203;</span></button>
+                <button id="share_toast" class="hidden">Copied to clipboard</button>
+            </div>
         </div>
       </div>
   </body>

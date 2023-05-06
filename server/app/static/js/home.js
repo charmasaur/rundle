@@ -1,5 +1,6 @@
 const DELAY_PER_HINT = 300;
 const STATS_DELAY = 500;
+const TOAST_DELAY = 500;
 
 function is_valid_guess(guess) {
     return guess in CHOICES;
@@ -104,7 +105,7 @@ function get_guess_hint_contents(guess) {
 }
 
 /**
- * Populates a table row with hints, based on the provided hint contents codes.
+ * Converts hint contents codes to hint text/emoji.
  *
  * The hint contents code takes the form:
  * [
@@ -115,10 +116,8 @@ function get_guess_hint_contents(guess) {
  *   <dist (<x>/=)>,
  *   <bearing (N/NE/.../=)>,
  * ]
- *
- * Invokes the callback on each cell if provided.
  */
-function populate_guess_hints(row, hint_contents, callback) {
+function convert_guess_hints(hint_contents) {
     // Mappings from code to the appropriate character for that part of the hint
     const length_chars = {
         "+": PLUS,
@@ -153,12 +152,7 @@ function populate_guess_hints(row, hint_contents, callback) {
         x => done ? MEDAL : bearing_chars[x],
     ];
 
-    for (let i = 0; i < row.cells.length; i++) {
-        row.cells[i].textContent = funcs[i](hint_contents[1+i]);
-        if (typeof callback === 'function') {
-            callback(i, row.cells[i]);
-        }
-    }
+    return funcs.map((f, i) => f(hint_contents[1+i]));
 }
 
 function get_storage_item(name, def) {
@@ -276,6 +270,37 @@ function init_stats() {
   document.getElementById("open_stats").onclick = open_stats;
 }
 
+function init_share(guesses) {
+  const button = document.getElementById("share_button");
+  const toast = document.getElementById("share_toast");
+
+  share = function() {
+    const result = [];
+    result.push("Rundle " + RUN_DATE);
+    for (const guess of guesses) {
+      const row = [];
+      convert_guess_hints(get_guess_hint_contents(guess))
+         .map((content, i) => {
+           if (i > 0) {
+             row.push(content);
+           }
+         });
+      result.push(row.join(" "));
+    }
+
+    navigator.clipboard.writeText(result.join("\n"));
+    button.classList.add("hidden");
+    toast.classList.remove("hidden");
+    setTimeout(() => {
+        toast.classList.add("hidden");
+        button.classList.remove("hidden");
+    }, TOAST_DELAY);
+  }
+
+  document.getElementById("share_container").classList.remove("hidden");
+  button.onclick = share;
+}
+
 function save_state(guesses) {
   put_storage_item("guesses", JSON.stringify(guesses));
   put_storage_item("date", RUN_DATE);
@@ -321,7 +346,8 @@ window.onload = function() {
   // Populate help page.
   const examples = document.getElementsByName("help_example");
   for (const example of examples) {
-      populate_guess_hints(example, example.dataset.hintContents.split(","));
+      convert_guess_hints(example.dataset.hintContents.split(","))
+          .map((content, i) => example.cells[i].textContent = content);
   }
 
   var num_previous_guesses = 0;
@@ -341,10 +367,11 @@ window.onload = function() {
       }
       previous_guesses.push(guess);
 
-      populate_guess_hints(
-          document.getElementById("hint_" + num_previous_guesses),
-          get_guess_hint_contents(guess),
-          (i, cell) => {
+      let row = document.getElementById("hint_" + num_previous_guesses)
+      convert_guess_hints(get_guess_hint_contents(guess))
+         .map((content, i) => {
+            const cell = row.cells[i]
+            cell.textContent = content;
             if (i == 0) {
                 return;
             }
@@ -380,7 +407,7 @@ window.onload = function() {
           } else {
             show_answer();
           }
-
+          init_share(previous_guesses);
       }
   };
 
