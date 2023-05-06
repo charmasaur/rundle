@@ -217,6 +217,9 @@ function init_help() {
 }
 
 function populate_stats(history) {
+  // To make things simpler, ignore any history from after "today", and sort by date.
+  history = history.filter(h => h["date"] <= RUN_DATE).sort((a, b) => new Date(a["date"]).getTime() - new Date(b["date"]).getTime());
+
   const played = history.length;
   const played_dates = history.map(h => h["date"]);
 
@@ -224,23 +227,31 @@ function populate_stats(history) {
   const won = won_days.length;
   const won_dates = won_days.map(h => h["date"]);
 
-  var latest_day = new Date(RUN_DATE);
-  if (!played_dates.includes(RUN_DATE) && played_dates.length > 0) {
-    // If we haven't played yet today, but have played before, start the streak from the latest
-    // played.
-    latest_day = new Date(
-        history.reduce((latest, h) => latest > h["date"] ? latest : h["date"], ""));
-  }
-  var streak = 0;
-  while (won_dates.includes(latest_day.toISOString().substr(0, 10))) {
-      streak++;
-      latest_day.setDate(latest_day.getDate() - 1);
+  if (won == 0) {
+    var best_streak = 0;
+    var current_streak = 0;
+  } else {
+    var streaks = [1];
+    var previous_date = new Date(won_dates[0]);
+    for (var date of won_dates.slice(1)) {
+      previous_date.setDate(previous_date.getDate() + 1);
+      if (previous_date.toISOString().substr(0, 10) == date) {
+        streaks[streaks.length - 1]++;
+      } else {
+        streaks.push(1);
+        previous_date = new Date(date);
+      }
+    }
+
+    var best_streak = Math.max(...streaks);
+    var current_streak = played_dates.at(-1) == won_dates.at(-1) ? streaks.at(-1) : 0;
   }
 
   document.getElementById("stats_played").textContent = played;
   document.getElementById("stats_win").textContent =
         played == 0 ? 0 : ((won/played)*100).toFixed(0);
-  document.getElementById("stats_streak").textContent = streak;
+  document.getElementById("stats_current_streak").textContent = current_streak;
+  document.getElementById("stats_best_streak").textContent = best_streak;
 }
 
 function show_stats() {
