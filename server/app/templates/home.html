@@ -63,9 +63,24 @@
         }
         div.card {
             text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
             border-style: solid;
             border-width: thin;
             border-radius: 2px;
+        }
+        div.map-card {
+            position: relative;
+            aspect-ratio: 1;
+            margin: auto;
+            background-color: #ffffff;
+            border-style: solid;
+            border-width: thin;
+            border-radius: 2px;
+            overflow: auto;
+            width: 100%;
         }
         .modal {
             display: flex;
@@ -78,7 +93,7 @@
             padding: 20px;
         }
         .hidden {
-            display: none;
+            display: none !important;
         }
         .modal-card {
             margin: auto;
@@ -93,6 +108,12 @@
         .corner-button {
             float: right;
         }
+        .map-corner-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 99;
+        }
         .corner-button-container {
             position: absolute;
             right: 6px;
@@ -101,7 +122,16 @@
         span.icon {
             font-size: 24px;
         }
+        span.map-icon {
+            position: absolute;
+            right: 10px;
+        }
+        div.fullheight {
+            height: 100%;
+        }
       </style>
+      <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.45.0/mapbox-gl.css' rel='stylesheet' />
+      <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.45.0/mapbox-gl.js'></script>
       <script src="https://twemoji.maxcdn.com/v/latest/twemoji.min.js" crossorigin="anonymous"></script>
       <script type="text/javascript">
           var CHOICES = {{choices|tojson|safe}};
@@ -109,6 +139,7 @@
           var TARGET_DETAILS = {{target_details|tojson|safe}};
           var NUM_GUESSES = {{num_guesses}};
           var RUN_DATE = {{run_date|tojson|safe}};
+          var MAPBOX_API_KEY = {{mapbox_api_key|tojson|safe}};
       </script>
       <script type="text/javascript" src={{ "/static/js/home.js" | version }}></script>
   </head>
@@ -152,7 +183,10 @@
                 <input list="choices" id="guess" placeholder="Enter your guess..."/>
                 <button class="guess" form="guess_form" id="guess_form_button">Guess <span>&#127939;</span></button>
               </form>
-              <div id="answer" class="card" hidden="true"></div>
+              <div id="answer_container" class="card hidden">
+                <div id="answer"></div>
+                <span id="open_map" class="icon map-icon">&#128506;</span>
+              </div>
           </div>
       </div>
       <div id="help" class="modal hidden">
@@ -230,6 +264,14 @@
                 <button id="share_button">Share <span>&#128203;</span></button>
                 <button id="share_toast" class="hidden">Copied to clipboard</button>
             </div>
+        </div>
+      </div>
+      <div id="map" class="modal hidden">
+        <div class="map-card">
+            <div id="close_map" class="map-corner-button">
+                <span>&#10006;</span>
+            </div>
+            <div id="map_display" class="fullheight"></div>
         </div>
       </div>
   </body>

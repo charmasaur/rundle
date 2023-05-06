@@ -1,6 +1,6 @@
 const DELAY_PER_HINT = 300;
 const STATS_DELAY = 500;
-const TOAST_DELAY = 500;
+const TOAST_DELAY = 1000;
 
 function is_valid_guess(guess) {
     return guess in CHOICES;
@@ -192,7 +192,6 @@ function is_storage_available() {
 
 function init_help() {
   const help = document.getElementById("help");
-  const help_open_display = help.style.display;
 
   close_help = function() {
     help.classList.add("hidden");
@@ -255,7 +254,6 @@ function show_stats() {
 
 function init_stats() {
   const stats = document.getElementById("stats");
-  const stats_open_display = stats.style.display;
 
   populate_stats(load_history());
 
@@ -301,6 +299,35 @@ function init_share(guesses) {
 
   document.getElementById("share_container").classList.remove("hidden");
   button.onclick = share;
+}
+
+function init_map() {
+  const map_modal = document.getElementById("map");
+  const map_display = document.getElementById("map_display");
+
+  mapboxgl.accessToken = MAPBOX_API_KEY;
+  var target_position = {lat: TARGET_DETAILS['lat'], lng: TARGET_DETAILS['lng']};
+  var map = new mapboxgl.Map({
+      container: map_display,
+      center: target_position,
+      zoom: 8,
+      style: 'mapbox://styles/mapbox/streets-v9'
+  });
+  map.on('render', () => map.resize());
+
+  var marker = new mapboxgl.Marker()
+      .setLngLat(target_position)
+      .addTo(map);
+
+  close_map = function() {
+    map_modal.classList.add("hidden");
+  }
+  open_map = function() {
+    map_modal.classList.remove("hidden");
+  }
+
+  document.getElementById("close_map").onclick = close_map;
+  document.getElementById("open_map").onclick = open_map;
 }
 
 function save_state(guesses) {
@@ -356,6 +383,7 @@ window.onload = function() {
 
   var guess_form_element = document.getElementById("guess_form");
   var answer_element = document.getElementById("answer");
+  var answer_container_element = document.getElementById("answer_container");
   var guess_form_button_element = document.getElementById("guess_form_button");
   var guess_element = document.getElementById("guess");
   var previous_guesses = [];
@@ -399,7 +427,8 @@ window.onload = function() {
                   + "km "
                   + TARGET_DETAILS["elevation"]
                   + "m";
-              answer_element.hidden = false;
+              answer_container_element.classList.remove("hidden");
+              init_map();
           };
           if (is_realtime) {
             const answer_delay = document.getElementById("hint_0").cells.length * DELAY_PER_HINT

@@ -98,6 +98,7 @@ def render_rundle_day(rundle_day):
         },
         num_guesses=6,
         run_date=rundle_day.date.isoformat(),
+        mapbox_api_key=os.getenv("MAPBOX_API_KEY", ""),
     )
 
 ### Poking
