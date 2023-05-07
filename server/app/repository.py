@@ -29,6 +29,7 @@ class RundleCourse(db.Model):
 
 FIG_SIZE = (4, 4)
 MAX_ELEVATION = 1500
+MAX_POINTS = 10000
 
 def create_map_image(run):
     fig, ax = plt.subplots(figsize=FIG_SIZE)
@@ -178,6 +179,9 @@ def create_post():
     data = np.array(
         [[point.latitude, point.longitude, point.elevation]
          for point in gpx.tracks[0].segments[0].points])
+    if len(data) > MAX_POINTS:
+        factor = round(0.5+len(data)/MAX_POINTS)
+        data = data[::factor, :]
     elevation = round(np.maximum(0, np.diff(data[:, 2])).sum())
     length = round(
         sum(Geodesic.WGS84.Inverse(*data[i, 0:2], *data[i+1, 0:2])['s12']
