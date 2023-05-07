@@ -14,7 +14,7 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 
 from app.app import app, db
-from app.loader import RundleDay2, load_rundle_day, load_rundle_day_from_token
+from app.loader import RundleDay2, create_rundle_day, create_rundle_day_from_key
 from app.images import image_data
 
 @dataclass
@@ -51,23 +51,45 @@ def today():
 
 @app.route('/', methods=['GET'])
 def home():
-    return render_today();
+    date = today()
+
+    rundle_day = RundleDay2.query.filter(RundleDay2.date == today()).one_or_none()
+    if True or not rundle_day:
+        rundle_day = create_rundle_day(today(), 30)
+        db.session.add(rundle_day)
+        # Could be a race here, but whatever.
+        try:
+            db.session.commit()
+        except:
+            # Could fail due to a race, and uniqueness of date being violated. If so then try to
+            # query once more.
+            db.session.rollback()
+            rundle_day = RundleDay2.query.filter(RundleDay2.date == today()).one()
+
+    return render_rundle_day(rundle_day)
 
 @app.route('/debug', methods=['GET'])
 def debug():
     if 'date' in request.args:
-        return render_rundle_day(load_rundle_day(date.fromisoformat(request.args['date'])))
-    elif 'token' in request.args:
-        return render_rundle_day(load_rundle_day_from_token(
-            date.fromisoformat("1990-01-01"), request.args['token']))
+        # Pick a new target for the date and render that
+        return render_rundle_day(
+            create_rundle_day(
+                date.fromisoformat(request.args['date']),
+                int(request.args.get("lookback", "30")),
+            ))
+    elif 'past_date' in request.args:
+        # Use the run selected on a previous date
+        rundle_day = RundleDay2.query.filter(
+            RundleDay2.date == date.fromisoformat(request.args['past_date'])).first()
+        if not rundle_day:
+            return "No day found"
+        return render_rundle_day(rundle_day)
+    elif 'key' in request.args:
+        # Use a specific run
+        return render_rundle_day(create_rundle_day_from_key(
+            date.fromisoformat("1990-01-01"), int(request.args['key'])))
     else:
-        return render_today()
-
-def render_today():
-    rundle_day = RundleDay2.query.filter(RundleDay2.date <= today()).order_by(RundleDay2.date.desc()).first()
-    if not rundle_day:
-        return "Something went wrong"
-    return render_rundle_day(rundle_day)
+        return "Specify date, past_date or key"
 
 def render_rundle_day(rundle_day):
     choices = {choice["token"]: Choice.create(choice) for choice in rundle_day.choices}
@@ -96,37 +118,6 @@ def render_rundle_day(rundle_day):
         run_date=rundle_day.date.isoformat(),
         mapbox_api_key=os.getenv("MAPBOX_API_KEY", ""),
     )
-
-### Poking
-
-@app.route('/poke', methods=['POST'])
-def poke():
-    if 'date' in request.args:
-        requested_date = date.fromisoformat(request.args['date'])
-    else:
-        requested_date = today()
-
-    return poke_date(requested_date)
-
-@app.route('/debug/poke', methods=['GET'])
-def debugpoke():
-    if 'date' in request.args:
-        requested_date = date.fromisoformat(request.args['date'])
-    else:
-        requested_date = today()
-
-    return poke_date(date.fromisoformat(request.args['date']))
-
-def poke_date(requested_date):
-    day = RundleDay2.query.filter(RundleDay2.date == requested_date).first()
-    if day:
-        return f"Already poked for {requested_date}"
-
-    day = load_rundle_day(requested_date)
-    db.session.add(day)
-    # Could be a race here, but whatever.
-    db.session.commit()
-    return f"Successfully poked for {requested_date}"
 
 ### Versioning JS
 

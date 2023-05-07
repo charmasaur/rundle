@@ -28,7 +28,7 @@ class RundleCourse(db.Model):
     elevation = db.Column(db.Integer) # m
 
 FIG_SIZE = (4, 4)
-MAX_ELEVATION = 2200
+MAX_ELEVATION = 1500
 
 def create_map_image(run):
     fig, ax = plt.subplots(figsize=FIG_SIZE)
