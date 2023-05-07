@@ -54,7 +54,7 @@ def home():
     date = today()
 
     rundle_day = RundleDay2.query.filter(RundleDay2.date == today()).one_or_none()
-    if True or not rundle_day:
+    if not rundle_day:
         rundle_day = create_rundle_day(today(), 30)
         db.session.add(rundle_day)
         # Could be a race here, but whatever.
