@@ -14,11 +14,29 @@
           <img class = "drawing" src={{profile}} width=200 height=200>
       </div>
       <div>
-          {{token}}: {{name}} {{length}}km {{elevation}}m {{latitude}} {{longitude}}<br>
+            {{key}}: {{length}}km {{elevation}}m {{latitude}} {{longitude}}<br>
+            <form action="{{update_url}}" method=post enctype=multipart/form-data>
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" value="{{name}}"><br>
+                <label for="approved">Approved:</label>
+                {% if approved %}
+                <input type="checkbox" id="approved" name="approved" checked=true><br>
+                {% else %}
+                <input type="checkbox" id="approved" name="approved"><br>
+                {% endif %}
+                <input type="submit" value="Update" />
+            </form>
       </div>
+      <br>
       <div>
           <form action="{{delete_url}}">
               <input type="submit" value="Delete" />
+          </form>
+      </div>
+      <br>
+      <div>
+          <form action="{{list_url}}">
+              <input type="submit" value="Back to list" />
           </form>
       </div>
 

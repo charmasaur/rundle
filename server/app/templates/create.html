@@ -2,31 +2,17 @@
 <meta charset="UTF-8">
 <html>
   <head>
-      <title>Rundle: create or edit run</title>
+      <title>Rundle: create run</title>
   </head>
   <body>
       <h1>
-          Rundle: create or edit run
+          Rundle: create run
       </h1>
       <form action=create method=post enctype=multipart/form-data>
-          <label for="token">Token:</label>
-          <input type="text" id="token" id="token" name="token"><br>
-          <label for="name">Name:</label>
+          <label for="gpx">GPX:</label>
+          <input type="file" id="gpx" name="gpx"/><br>
+          <label for="name">Name (leave blank to extract from GPX):</label>
           <input type="text" id="name" id="name" name="name"><br>
-          <label for="lat">Latitude:</label>
-          <input type="number" id="lat" name="lat" step="any"><br>
-          <label for="lng">Longitude:</label>
-          <input type="number" id="lng" name="lng" step="any"><br>
-          <label for="length">Length (km):</label>
-          <input type="number" id="length" name="length" step="any"><br>
-          <label for="elevation">Elevation (m):</label>
-          <input type="number" id="elevation" name="elevation" step="any"><br>
-          <label for="map_image">Map image (SVG):</label>
-          <input type="file" id="map_image" name="map_image"/><br>
-          <label for="profile_image">Elevation profile image (SVG):</label>
-          <input type="file" id="profile_image" name="profile_image"/><br>
-          <label for="override">Override run with same token:</label>
-          <input type="checkbox" id="override" name="override" value="override"><br>
           <input type="submit" value="Create"/>
       </form>
   </body>

@@ -9,9 +9,16 @@
       <h1>
           Rundle: list runs
       </h1>
+      <h2>Unapproved</h2>
       <div>
-          {% for run in runs %}
-          <a href={{run.url}}>{{run.token}}: {{run.name}} {{run.length}}km {{run.elevation}}m {{run.latitude}} {{run.longitude}}<br></a>
+          {% for run in unapproved_runs %}
+          <a href={{run.url}}>{{run.key}}: {{run.name}} {{run.length}}km {{run.elevation}}m {{run.latitude}} {{run.longitude}}<br></a>
+          {% endfor %}
+      </div>
+      <h2>Approved</h2>
+      <div>
+          {% for run in approved_runs %}
+          <a href={{run.url}}>{{run.key}}: {{run.name}} {{run.length}}km {{run.elevation}}m {{run.latitude}} {{run.longitude}}<br></a>
           {% endfor %}
       </div>
   </body>

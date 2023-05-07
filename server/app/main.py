@@ -3,7 +3,6 @@ from datetime import datetime, date
 from functools import lru_cache
 import hashlib
 import os
-import base64
 import random
 import uuid
 
@@ -16,6 +15,7 @@ from googleapiclient.discovery import build
 
 from app.app import app, db
 from app.loader import RundleDay2, load_rundle_day, load_rundle_day_from_token
+from app.images import image_data
 
 @dataclass
 class Choice:
@@ -34,10 +34,6 @@ def dist(guess, target):
 
 def bearing(guess, target):
     return Geodesic.WGS84.Inverse(guess.lat, guess.lng, target.lat, target.lng)["azi1"]
-
-def image_data(svg_bytes):
-    svg_base64 = base64.b64encode(svg_bytes).decode("ascii")
-    return f"data:image/svg+xml;base64,{svg_base64}"
 
 def compare(x, y):
     if x < y:
