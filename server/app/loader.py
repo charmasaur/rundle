@@ -8,6 +8,7 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 
 from app.app import db
+from app.repository import RundleCourse
 
 # Record of a single day of Rundle
 class RundleDay2(db.Model):
@@ -28,6 +29,12 @@ SHEET_SEQUENCE_RANGE = "Sequence!A:B"
 
 MAP_IMAGE_FILENAME_PATTERN = "{}_course.svg"
 PROFILE_IMAGE_FILENAME_PATTERN = "{}_elev_scaled.svg"
+
+#def create_rundle_day_from_key_and_date(key, date):
+#    target_course = RundleCourse.query.get(key)
+#    courses = RundleCourse.query.all()
+
+
 
 def load_rundle_day(date):
     """Fetches the sequence, and loads the RundleDay for the specified date."""

@@ -30,12 +30,6 @@ class RundleCourse(db.Model):
 FIG_SIZE = (4, 4)
 MAX_ELEVATION = 2200
 
-def save_to_bytes(fig):
-    buffer = io.BytesIO()
-    fig.savefig(buffer, format='svg', bbox_inches='tight')
-    buffer.seek(0)
-    return buffer.read()
-
 def create_map_image(run):
     fig, ax = plt.subplots(figsize=FIG_SIZE)
     ax.axis('off')
@@ -54,6 +48,12 @@ def create_profile_image(run):
     if M - m <= MAX_ELEVATION:
         ax.set_ylim([m, m + 2200])
     return save_to_bytes(fig)
+
+def save_to_bytes(fig):
+    buffer = io.BytesIO()
+    fig.savefig(buffer, format='svg', bbox_inches='tight')
+    buffer.seek(0)
+    return buffer.read()
 
 @app.route('/view/<key>', methods=['GET'])
 def view(key):
@@ -85,7 +85,15 @@ def view(key):
 
 @app.route('/list', methods=['GET'])
 def list_endpoint():
-    runs = RundleCourse.query.all()
+    runs = RundleCourse.query.add_columns(
+        RundleCourse.key,
+        RundleCourse.name,
+        RundleCourse.approved,
+        RundleCourse.length,
+        RundleCourse.elevation,
+        RundleCourse.lat,
+        RundleCourse.lng,
+    ).all()
     run_dicts = [
         {
             "key": str(run.key),
@@ -147,7 +155,10 @@ def create_get():
     return render_template("create.html")
 
 def find_duplicate(name):
-    return RundleCourse.query.filter(RundleCourse.name == name).first()
+    return RundleCourse.query.add_columns(
+        RundleCourse.key,
+        RundleCourse.name,
+    ).filter(RundleCourse.name == name).first()
 
 @app.route('/create', methods=['POST'])
 def create_post():
