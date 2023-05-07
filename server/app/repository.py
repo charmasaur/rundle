@@ -181,14 +181,14 @@ def create_post():
             return "No name", 400
     duplicate = find_duplicate(name)
     if duplicate:
-        return format_view_link(duplicate.key, "Duplicate name")
+        return format_view_link(duplicate.key, "Duplicate name"), 400
 
     run = RundleCourse(
         name=name,
         latitudes=list(data[:, 0]),
         longitudes=list(data[:, 1]),
         elevations=list(data[:, 2]),
-        approved=False,
+        approved=request.form.get("approve") == "on",
         lat=lat,
         lng=lng,
         length=length,

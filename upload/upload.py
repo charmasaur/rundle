@@ -53,6 +53,8 @@ def generate(upload, url, ids):
     overview_filename = "Rundle/course_overview.csv"
     map_filename_template = "Rundle/course_maps/{}_course.svg"
     profile_filename_template = "Rundle/course_profiles_scaled/{}_elev_scaled.svg"
+    gpx_filename_template = "Rundle/course_gpx/{}.gpx"
+    gpx_filename_fallback_template = "Rundle/course_gpx/{}.GPX"
 
     names = get_names(reference_filename)
     attributes = get_attributes(overview_filename)
@@ -63,20 +65,32 @@ def generate(upload, url, ids):
     for id in ids:
         map_filename = map_filename_template.format(id)
         profile_filename = profile_filename_template.format(id)
+        gpx_filename = gpx_filename_template.format(id)
+        if not exists(gpx_filename):
+            gpx_filename = gpx_filename_fallback_template.format(id)
 
-        assert id in attributes, f"Attributes not found for {id}"
-        assert exists(map_filename), f"Map '{map_filename}' not found for {id}"
-        assert exists(profile_filename), f"Profile '{profile_filename}' not found for {id}"
+        have_data = True
+        if not id in attributes:
+            print(f"Attributes not found for {id}")
+            have_data = False
+        if not exists(map_filename):
+            print(f"Map '{map_filename}' not found for {id}")
+            have_data = False
+        if not exists(profile_filename):
+            print(f"Profile '{profile_filename}' not found for {id}")
+            have_data = False
+        if not exists(gpx_filename):
+            print(f"GPX '{gpx_filename}' not found for {id}")
+            have_data = False
 
-        files = {"map_image": map_filename, "profile_image": profile_filename}
+        if not have_data:
+            print(f"Ignoring {id}")
+            continue
+
+        files = {"gpx": gpx_filename}
         data = {
-            "token": id,
             "name": names[id],
-            "lat": attributes[id].lat,
-            "lng": attributes[id].lng,
-            "length": attributes[id].dist,
-            "elevation": attributes[id].elev,
-            "override": "override",
+            "approve": "on",
         }
 
         if upload:
