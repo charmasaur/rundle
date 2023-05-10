@@ -310,10 +310,39 @@ function init_map() {
   var map = new mapboxgl.Map({
       container: map_display,
       center: target_position,
-      zoom: 8,
-      style: 'mapbox://styles/mapbox/streets-v9'
+      zoom: 10,
+      style: 'mapbox://styles/mapbox/outdoors-v12'
   });
-  map.on('render', () => map.resize());
+
+  map.on('load', () => {
+      if (TARGET_DETAILS["latitudes"].length == 0) {
+          return;
+      }
+      map.addSource('route', {
+          'type': 'geojson',
+          'data': {
+              'type': 'Feature',
+              'properties': {},
+              'geometry': {
+                  'type': 'LineString',
+                  'coordinates': TARGET_DETAILS["latitudes"].map(
+                      (lat, i) => [TARGET_DETAILS["longitudes"][i], lat]),
+              },
+          },
+      });
+      map.addLayer(
+          { 'id': 'route',
+              'type': 'line',
+              'source': 'route',
+              'layout': {
+                  'line-join': 'round',
+                  'line-cap': 'round',
+              },
+              'paint': { 'line-color': '#f00', 'line-width': 3 },
+          },
+          // Position just below the labels.
+          "poi-label");
+  });
 
   var marker = new mapboxgl.Marker()
       .setLngLat(target_position)
@@ -324,6 +353,7 @@ function init_map() {
   }
   open_map = function() {
     map_modal.classList.remove("hidden");
+    map.resize();
   }
 
   document.getElementById("close_map").onclick = close_map;
@@ -352,7 +382,12 @@ function update_history(guesses, success) {
       "success": success,
       "guesses": guesses,
       "target": TARGET,
-      "target_details": TARGET_DETAILS,
+      "target_details": {
+          "length": TARGET_DETAILS["length"],
+          "elevation": TARGET_DETAILS["elevation"],
+          "lat": TARGET_DETAILS["lat"],
+          "lng": TARGET_DETAILS["lng"],
+      },
       "num_guesses": NUM_GUESSES,
   }
 

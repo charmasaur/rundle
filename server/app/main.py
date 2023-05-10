@@ -113,6 +113,8 @@ def render_rundle_day(rundle_day):
             "elevation": target.elevation,
             "lat": target.lat,
             "lng": target.lng,
+            "latitudes": rundle_day.latitudes,
+            "longitudes": rundle_day.longitudes,
         },
         num_guesses=6,
         run_date=rundle_day.date.isoformat(),

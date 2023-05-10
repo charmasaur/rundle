@@ -1,8 +1,12 @@
 from datetime import date, timedelta
 import random
 
+from sqlalchemy import ARRAY
+
 from app.app import db
 from app.repository import RundleCourse, create_map_image, create_profile_image
+
+MAX_POINTS = 100
 
 # Record of a single day of Rundle
 class RundleDay2(db.Model):
@@ -12,6 +16,8 @@ class RundleDay2(db.Model):
     map_image = db.Column(db.LargeBinary) # SVG
     profile_image = db.Column(db.LargeBinary) # SVG
     choices = db.Column(db.JSON) # list of "token", "name", "lat", "lng", "dist" (km), "elev" (m)
+    latitudes = db.Column(ARRAY(db.Float), nullable=True)
+    longitudes = db.Column(ARRAY(db.Float), nullable=True)
 
 
 def create_rundle_day(date, lookback):
@@ -55,12 +61,23 @@ def _create_rundle_day(date, target, courses):
          "elev": course.elevation,
          } for course in courses]
 
+    latitudes = target_course.latitudes or []
+    longitudes = target_course.longitudes or []
+
+    if len(latitudes) > MAX_POINTS:
+        factor = round(0.5+len(latitudes)/MAX_POINTS)
+        latitudes = latitudes[::factor]
+        longitudes = longitudes[::factor]
+
     day = RundleDay2(
         date=date,
         target=str(target_course.key),
         map_image=create_map_image(target_course),
         profile_image=create_profile_image(target_course),
-        choices=courses_dicts)
+        choices=courses_dicts,
+        latitudes=latitudes,
+        longitudes=longitudes,
+    )
 
     return day
 
